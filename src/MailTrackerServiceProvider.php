@@ -27,29 +27,90 @@ class MailTrackerServiceProvider extends ServiceProvider
     public function boot()
     {
         // Publish pieces
+        $this->publishConfig();
+        $this->publishMigrations();
+        $this->publishViews();
+
+        // Hook into the mailer
+        $this->registerSwiftPlugin();
+
+        // Install the routes
+        $this->installRoutes();
+    }
+
+    /**
+     * Register any package services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        //
+    }
+
+    /**
+     * Publish the configuration files
+     *
+     * @return void
+     */
+    protected function publishConfig()
+    {
         if (!$this->isLumen()) {
             $this->publishes([
                 __DIR__.'/../config/mail-tracker.php' => config_path('mail-tracker.php')
             ], 'config');
+        }
+    }
+
+    /**
+     * Publish the migrations needed
+     *
+     * @return void
+     */
+    protected function publishMigrations()
+    {
+        if (!$this->isLumen()) {
             $this->publishes([
                 __DIR__.'/../migrations/2016_03_01_193027_create_sent_emails_table.php' => database_path('migrations/2016_03_01_193027_create_sent_emails_table.php')
             ], 'config');
             $this->publishes([
                 __DIR__.'/../migrations/2016_09_07_193027_create_sent_emails_Url_Clicked_table.php' => database_path('migrations/2016_09_07_193027_create_sent_emails_Url_Clicked_table.php')
             ], 'config');
-            $this->publishes([
-                __DIR__.'/../migrations/2016_11_10_213551_add-message-id-to-sent-emails-table.php' => database_path('migrations/2016_11_10_213551_add-message-id-to-sent-emails-table.php')
-            ], 'config');
+        }
+    }
+
+    /**
+     * Publish the views
+     *
+     * @return void
+     */
+    protected function publishViews()
+    {
+        if (!$this->isLumen()) {
             $this->loadViewsFrom(__DIR__.'/views', 'emailTrakingViews');
             $this->publishes([
                 __DIR__.'/views' => base_path('resources/views/vendor/emailTrakingViews'),
                 ]);
         }
+    }
 
-        // Hook into the mailer
+    /**
+     * Register the Swift plugin
+     *
+     * @return void
+     */
+    protected function registerSwiftPlugin()
+    {
         $this->app['mailer']->getSwiftMailer()->registerPlugin(new MailTracker());
+    }
 
-        // Install the routes
+    /**
+     * Install the needed routes
+     *
+     * @return void
+     */
+    protected function installRoutes()
+    {
         $config = $this->app['config']->get('mail-tracker.route', []);
         $config['namespace'] = 'jdavidbakr\MailTracker';
 
@@ -93,15 +154,5 @@ class MailTrackerServiceProvider extends ServiceProvider
                 $app->get('smtp-detail/{id}', 'AdminController@getSmtpDetail')->name('mailTracker_SmtpDetail');
             });
         }
-    }
-
-    /**
-     * Register any package services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
     }
 }
