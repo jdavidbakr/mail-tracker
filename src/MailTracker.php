@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace jdavidbakr\MailTracker;
 
@@ -18,53 +18,11 @@ class MailTracker implements \Swift_Events_SendListener {
 	{
 		$message = $event->getMessage();
 
-        foreach($message->getTo() as $to_email=>$to_name) {
-            foreach($message->getFrom() as $from_email=>$from_name) {
-            	$headers = $message->getHeaders();
-            	$hash = str_random(32);
-                $headers->addTextHeader('X-Mailer-Hash',$hash);
-                $subject = $message->getSubject();
-
-            	$original_content = $message->getBody();
-
-                if ($message->getContentType() === 'text/html' ||
-                    ($message->getContentType() === 'multipart/alternative' && $message->getBody())
-                ) {
-                	$message->setBody($this->addTrackers($message->getBody(), $hash));
-                }
-
-                foreach ($message->getChildren() as $part) {
-                    if (strpos($part->getContentType(), 'text/html') === 0) {
-                        $converter->setHTML($part->getBody());
-                        $part->setBody($this->addTrackers($message->getBody(), $hash));
-                    }
-                }    	
-
-                $tracker = SentEmail::create([
-                        'hash'=>$hash,
-                        'headers'=>$headers->toString(),
-                        'sender'=>$from_name." <".$from_email.">",
-                        'recipient'=>$to_name.' <'.$to_email.'>',
-                        'subject'=>$subject,
-                        'content'=>$original_content,
-                        'opens'=>0,
-                        'clicks'=>0,
-                        'message_id'=>$message->getId(),
-                        'meta'=>[],
-                    ]);
-                Event::fire(new EmailSentEvent($tracker));
-            }
-        }
+        // Create the trackers
+        $this->createTrackers($message);
 
     	// Purge old records
-    	if(config('mail-tracker.expire-days') > 0) {
-    		$emails = SentEmail::where('created_at','<',\Carbon\Carbon::now()
-                ->subDays(config('mail-tracker.expire-days')))
-                ->select('id')
-                ->get();
-            SentEmailUrlClicked::whereIn('sent_email_id',$emails->pluck('id'))->delete();
-            SentEmail::whereIn('id',$emails->pluck('id'))->delete();
-    	}
+        $this->purgeOldRecords();
 	}
 
     public function sendPerformed(\Swift_Events_SendEvent $event)
@@ -106,7 +64,7 @@ class MailTracker implements \Swift_Events_SendListener {
     	$tracking_pixel = '<img src="'.route('mailTracker_t',[$hash]).'" />';
 
     	$linebreak = str_random(32);
-    	$html = str_replace("\n",$linebreak,$html); 
+    	$html = str_replace("\n",$linebreak,$html);
 
     	if(preg_match("/^(.*<body[^>]*>)(.*)$/", $html, $matches)) {
     		$html = $matches[1].$tracking_pixel.$matches[2];
@@ -136,7 +94,7 @@ class MailTracker implements \Swift_Events_SendListener {
         } else {
             $url = $matches[2];
         }
-        
+
     	return $matches[1].route('mailTracker_l',
     		[
     			MailTracker::hash_url($url),
@@ -148,5 +106,70 @@ class MailTracker implements \Swift_Events_SendListener {
     {
         // Replace "/" with "$"
         return str_replace("/","$",base64_encode($url));
+    }
+
+    /**
+     * Create the trackers
+     *
+     * @param  Swift_Mime_Message $message
+     * @return void
+     */
+    protected function createTrackers($message)
+    {
+        foreach($message->getTo() as $to_email=>$to_name) {
+            foreach($message->getFrom() as $from_email=>$from_name) {
+                $headers = $message->getHeaders();
+                $hash = str_random(32);
+                $headers->addTextHeader('X-Mailer-Hash',$hash);
+                $subject = $message->getSubject();
+
+                $original_content = $message->getBody();
+
+                if ($message->getContentType() === 'text/html' ||
+                    ($message->getContentType() === 'multipart/alternative' && $message->getBody())
+                ) {
+                    $message->setBody($this->addTrackers($message->getBody(), $hash));
+                }
+
+                foreach ($message->getChildren() as $part) {
+                    if (strpos($part->getContentType(), 'text/html') === 0) {
+                        $converter->setHTML($part->getBody());
+                        $part->setBody($this->addTrackers($message->getBody(), $hash));
+                    }
+                }
+
+                $tracker = SentEmail::create([
+                    'hash'=>$hash,
+                    'headers'=>$headers->toString(),
+                    'sender'=>$from_name." <".$from_email.">",
+                    'recipient'=>$to_name.' <'.$to_email.'>',
+                    'subject'=>$subject,
+                    'content'=>$original_content,
+                    'opens'=>0,
+                    'clicks'=>0,
+                    'message_id'=>$message->getId(),
+                    'meta'=>[],
+                ]);
+
+                Event::fire(new EmailSentEvent($tracker));
+            }
+        }
+    }
+
+    /**
+     * Purge old records in the database
+     *
+     * @return void
+     */
+    protected function purgeOldRecords()
+    {
+        if(config('mail-tracker.expire-days') > 0) {
+            $emails = SentEmail::where('created_at','<',\Carbon\Carbon::now()
+                ->subDays(config('mail-tracker.expire-days')))
+                ->select('id')
+                ->get();
+            SentEmailUrlClicked::whereIn('sent_email_id',$emails->pluck('id'))->delete();
+            SentEmail::whereIn('id',$emails->pluck('id'))->delete();
+        }
     }
 }
