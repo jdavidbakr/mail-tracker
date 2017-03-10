@@ -16,6 +16,7 @@ class LinkClickedEvent
      * Create a new event instance.
      *
      * @param  sent_email  $sent_email
+     * @param  url_clicked  $url_clicked
      * @return void
      */
     public function __construct(SentEmail $sent_email, SentEmailUrlClicked $url_clicked)
