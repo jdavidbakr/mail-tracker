@@ -56,7 +56,7 @@ class MailTrackerController extends Controller
                     'hash' => $tracker->hash,
                 ]);
             }
-            Event::fire(new LinkClickedEvent($tracker));
+            Event::fire(new LinkClickedEvent($tracker, $url_clicked));
     	}
 
     	return redirect($url);
