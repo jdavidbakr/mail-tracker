@@ -87,4 +87,18 @@ class AdminController extends Controller
         }
         return \View('emailTrakingViews::url_detail')->with('details', $detalle);
     }
+
+    /**
+     * SMTP Detail.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getSMTPDetail($id)
+    {
+        $detalle = SentEmail::find($id);
+        if(!$detalle) {
+            return back();
+        }
+        return \View('emailTrakingViews::smtp_detail')->with('details', $detalle);
+    }
 }

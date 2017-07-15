@@ -54,4 +54,14 @@ return [
      */
     'date-format' => 'm/d/Y g:i a',
 
+    /**
+     * Default database connection name (optional - use null for default)
+     */
+    'connection' => null,
+
+    /**
+     * The SNS notification topic - if set, discard all notifications not in this topic.
+     */
+    'sns-topic' => null
+
 ];

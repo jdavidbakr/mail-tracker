@@ -16,6 +16,12 @@ class SentEmailUrlClicked extends Model
     	'clicks',
     ];
 
+    public function getConnectionName()
+    {
+        $connName = config('mail-tracker.connection');
+        return $connName ?: config('database.default');
+    }
+
     public function email()
     {
       return $this->belongsTo(SentEmail::class,'sent_email_id');

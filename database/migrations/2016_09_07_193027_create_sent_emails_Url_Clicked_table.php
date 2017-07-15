@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
 
 class CreateSentEmailsUrlClickedTable extends Migration
 {
@@ -12,11 +13,11 @@ class CreateSentEmailsUrlClickedTable extends Migration
      */
     public function up()
     {
-        Schema::create('sent_emails_url_clicked', function (Blueprint $table) {
+        Schema::connection((new SentEmailUrlClicked())->getConnectionName())->create('sent_emails_url_clicked', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('sent_email_id')->unsigned();
             $table->foreign('sent_email_id')->references('id')->on('sent_emails')->onDelete('cascade');
-            $table->string('url');
+            $table->string('url')->nullable();
             $table->char('hash',32);
             $table->integer('clicks')->default('1');
             $table->timestamps();
@@ -30,6 +31,6 @@ class CreateSentEmailsUrlClickedTable extends Migration
      */
     public function down()
     {
-        Schema::drop('sent_emails_url_clicked');
+        Schema::connection((new SentEmailUrlClicked())->getConnectionName())->drop('sent_emails_url_clicked');
     }
 }
