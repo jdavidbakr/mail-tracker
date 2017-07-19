@@ -35,7 +35,7 @@ class SentEmail extends Model
      */
     public function getReportClassAttribute()
     {
-        if($this->meta->has('success')) {
+        if(!empty($this->meta) && $this->meta->has('success')) {
             if($this->meta->get('success')) {
                 return 'success';
             } else {
@@ -52,7 +52,10 @@ class SentEmail extends Model
      */
     public function getSmtpInfoAttribute()
     {
-        $meta = $this->meta;
+	    if (empty($this->meta)) {
+		    return '';
+	    }
+	    $meta = $this->meta;
         $responses = [];
         if($meta->has('smtpResponse')) {
             $response = $meta->get('smtpResponse');
