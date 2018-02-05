@@ -4,6 +4,18 @@ namespace jdavidbakr\MailTracker\Model;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $hash
+ * @property string $headers
+ * @property string $sender
+ * @property string $recipient
+ * @property string $subject
+ * @property string $content
+ * @property int $opens
+ * @property int $clicks
+ * @property int|null $message_id
+ * @property string $meta
+ */
 class SentEmail extends Model
 {
     protected $fillable = [
