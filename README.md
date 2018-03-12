@@ -100,7 +100,7 @@ If you do not wish to have an email tracked, then you can add the ```X-No-Track`
 
 ## Events
 
-When an email is sent, viewed, or a link is clicked, its tracking information is counted in the database using the jdavidbark\MailTracker\Model\SentEmail model. You may want to do additional processing on these events, so an event is fired in these cases:
+When an email is sent, viewed, or a link is clicked, its tracking information is counted in the database using the jdavidbakr\MailTracker\Model\SentEmail model. You may want to do additional processing on these events, so an event is fired in these cases:
 
 * jdavidbakr\MailTracker\Events\EmailSentEvent
 * jdavidbakr\MailTracker\Events\ViewEmailEvent
