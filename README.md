@@ -41,7 +41,7 @@ jdavidbakr\MailTracker\MailTrackerServiceProvider::class,
 
 Publish the config file and migration
 ``` bash
-$ php artisan vendor:publish --provider='jdavidbakr\MailTracker\MailTrackerServiceProvider'
+$ php artisan vendor:publish --provider="jdavidbakr\MailTracker\MailTrackerServiceProvider"
 ```
 
 Run the migration
