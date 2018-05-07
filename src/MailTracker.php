@@ -137,7 +137,8 @@ class MailTracker implements \Swift_Events_SendListener {
                 $original_content = $message->getBody();
 
                 if ($message->getContentType() === 'text/html' ||
-                    ($message->getContentType() === 'multipart/alternative' && $message->getBody())
+                    ($message->getContentType() === 'multipart/alternative' && $message->getBody()) ||
+                    ($message->getContentType() === 'multipart/mixed' && $message->getBody())
                 ) {
                     $message->setBody($this->addTrackers($message->getBody(), $hash));
                 }
