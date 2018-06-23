@@ -59,8 +59,8 @@ Via Composer
 ``` bash
 $ composer require jdavidbakr/mail-tracker ~2.1
 ```
-
-Register the following service provider in bootstrap/app.php
+**Only in Laravel < 5.5**  
+Register the following service provider in bootstrap/app.php  
 
 ``` php
 jdavidbakr\MailTracker\MailTrackerServiceProvider::class
