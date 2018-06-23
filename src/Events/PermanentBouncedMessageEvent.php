@@ -5,20 +5,20 @@ namespace jdavidbakr\MailTracker\Events;
 use jdavidbakr\MailTracker\Model\SentEmail;
 use Illuminate\Queue\SerializesModels;
 
-class ViewEmailEvent
+class PermanentBouncedMessageEvent
 {
     use SerializesModels;
 
-    public $sent_email;
+    public $email_address;
 
     /**
      * Create a new event instance.
      *
-     * @param  sent_email  $sent_email
+     * @param  email_address  $email_address
      * @return void
      */
-    public function __construct(SentEmail $sent_email)
+    public function __construct($email_address)
     {
-        $this->sent_email = $sent_email;
+        $this->email_address = $email_address;
     }
 }

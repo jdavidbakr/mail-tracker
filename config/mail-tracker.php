@@ -1,41 +1,27 @@
-<?php
+<?php 
 
 return [
-	/*
-    |--------------------------------------------------------------------------
-    | Application Name
-    |--------------------------------------------------------------------------
-    |
-    | The application name for use in mail template
-    |
-    */
+    /**
+     * To disable the pixel injection, set this to false.
+     */
+    'inject-pixel'=>true,
 
-	/**
-	 * Your Name Application.
-	 */
-    'name' => 'Mail Tracker',
+    /**
+     * To disable injecting tracking links, set this to false.
+     */
+    'track-links'=>true,
 
-	/**
-	 * To disable the pixel injection, set this to false.
-	 */
-	'inject-pixel'=>true,
+    /**
+     * Optionally expire old emails, set to 0 to keep forever.
+     */
+    'expire-days'=>60,
 
-	/**
-	 * To disable injecting tracking links, set this to false.
-	 */
-	'track-links'=>true,
-
-	/**
-	 * Optionally expire old emails, set to 0 to keep forever.
-	 */
-	'expire-days'=>60,
-
-	/**
-	 * Where should the pingback URL route be?
-	 */
+    /**
+     * Where should the pingback URL route be?
+     */
     'route' => [
         'prefix' => 'email',
-        'middleware' => [],
+        'middleware' => ['web'],
     ],
 
     /**
@@ -43,25 +29,44 @@ return [
      */
     'admin-route' => [
         'prefix' => 'email-manager',
-        'middleware' => 'super',
+        'middleware' => ['web','super'],
     ],
 
     /**
      * Admin Tamplate
-	 * example
-	 * 'name' => 'layouts.app' for Default emailTraking use 'emailTrakingViews::layouts.app'
-	 * 'section' => 'content' for Default emailTraking use 'content'
-	 * 'styles_section' => 'styles' for Default emailTraking use 'styles'
+     * example
+     * 'name' => 'layouts.app' for Default emailTraking use 'emailTrakingViews::layouts.app'
+     * 'section' => 'content' for Default emailTraking use 'content'
+     * 'styles_section' => 'styles' for Default emailTraking use 'styles'
      */
     'admin-template' => [
         'name' => 'emailTrakingViews::layouts.app',
         'section' => 'content',
-        'styles_section' => 'styles',
     ],
+
+    /**
+     * Number of emails per page in the admin view
+     */
+    'emails-per-page'=>30,
 
     /**
      * Date Format
      */
-    'date-format' => 'd/m/Y',
+    'date-format' => 'm/d/Y g:i a',
+
+    /**
+     * Default database connection name (optional - use null for default)
+     */
+    'connection' => null,
+
+    /**
+     * The SNS notification topic - if set, discard all notifications not in this topic.
+     */
+    'sns-topic' => null,
+
+    /**
+     * Determines whether or not the body of the email is logged in the sent_emails table
+     */
+    'log-content' => true
 
 ];

@@ -1,99 +1,86 @@
 @extends(config('mail-tracker.admin-template.name'))
-@section(config('mail-tracker.admin-template.styles_section'))
-<style>
-    table {
-    width: 100%;
-    }
-
-    th {
-    height: 50px;
-    text-align: left;
-    }
-    .button {
-       border: 1px solid #0a3c59;
-       background: #3e779d;
-       background: -webkit-gradient(linear, left top, left bottom, from(#65a9d7), to(#3e779d));
-       background: -webkit-linear-gradient(top, #65a9d7, #3e779d);
-       background: -moz-linear-gradient(top, #65a9d7, #3e779d);
-       background: -ms-linear-gradient(top, #65a9d7, #3e779d);
-       background: -o-linear-gradient(top, #65a9d7, #3e779d);
-       background-image: -ms-linear-gradient(top, #65a9d7 0%, #3e779d 100%);
-       padding: 10.5px 21px;
-       -webkit-border-radius: 6px;
-       -moz-border-radius: 6px;
-       border-radius: 6px;
-       -webkit-box-shadow: rgba(255,255,255,0.4) 0 1px 0, inset rgba(255,255,255,0.4) 0 1px 0;
-       -moz-box-shadow: rgba(255,255,255,0.4) 0 1px 0, inset rgba(255,255,255,0.4) 0 1px 0;
-       box-shadow: rgba(255,255,255,0.4) 0 1px 0, inset rgba(255,255,255,0.4) 0 1px 0;
-       text-shadow: #7ea4bd 0 1px 0;
-       color: #06426c;
-       font-size: 14px;
-       font-family: helvetica, serif;
-       text-decoration: none;
-       vertical-align: middle;
-       }
-    .button:hover {
-       border: 1px solid #0a3c59;
-       text-shadow: #1e4158 0 1px 0;
-       background: #3e779d;
-       background: -webkit-gradient(linear, left top, left bottom, from(#65a9d7), to(#3e779d));
-       background: -webkit-linear-gradient(top, #65a9d7, #3e779d);
-       background: -moz-linear-gradient(top, #65a9d7, #3e779d);
-       background: -ms-linear-gradient(top, #65a9d7, #3e779d);
-       background: -o-linear-gradient(top, #65a9d7, #3e779d);
-       background-image: -ms-linear-gradient(top, #65a9d7 0%, #3e779d 100%);
-       color: #fff;
-       }
-    .button:active {
-       text-shadow: #1e4158 0 1px 0;
-       border: 1px solid #0a3c59;
-       background: #65a9d7;
-       background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#3e779d));
-       background: -webkit-linear-gradient(top, #3e779d, #65a9d7);
-       background: -moz-linear-gradient(top, #3e779d, #65a9d7);
-       background: -ms-linear-gradient(top, #3e779d, #65a9d7);
-       background: -o-linear-gradient(top, #3e779d, #65a9d7);
-       background-image: -ms-linear-gradient(top, #3e779d 0%, #65a9d7 100%);
-       color: #fff;
-       }
-</style>
-@endsection
 @section(config('mail-tracker.admin-template.section'))
-    <h1>Mail Tracker</h1>
-    <br>
-    <a href='{{route('mailTracker_NewEmail')}}' class='button'>New Mail</a>
-    <br><br>
-    <hr>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;">
-          <th>Recipient</th>
-          <th>Subject</th>
-          <th>Opens</th>
-          <th>Opens</th>
-          <th>Clicks</th>
-          <th>Send At</th>
-          <th>Show Email</th>
-          <th>Url Report</th>
-          @foreach($emails as $email)
-              <tr>
-                  <td>{{$email->recipient}}</td>
-                  <td>{{$email->subject}}</td>
-                  <td>{{$email->opens > 0 ? 'OPENED' : 'NOT OPEN'}}</td>
-                  <td>{{$email->opens}}</td>
-                  <td>{{$email->clicks}}</td>
-                  <td>{{$email->created_at->format(config('mail-tracker.date-format'))}}</td>
-                  <td>
-                      <a href="{{route('mailTracker_ShowEmail',$email->id)}}">Show</a>
-                  </td>
-                  <td>
-                      @if($email->clicks > 0)
-                          <a href="{{route('mailTracker_UrlDetail',$email->id)}}">Url Report</a>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1>Mail Tracker</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <h4 class="text-center">
+                    SNS Endpoint: {{ route('mailTracker_SNS') }}
+                </h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12 text-center">
+                <form action="{{ route('mailTracker_Search') }}" method="post" class="form-inline">
+                    {!! csrf_field() !!}
+                    <div class="form-group">
+                        <label for="search">
+                            Search
+                        </label>
+                        <input type="text" name="search" id="search" value="{{ session('mail-tracker-index-search') }}">
+                    </div>
+                    <button type="submit" class="btn btn-default">
+                        Search
+                    </button>
+                    <div class="btn btn-default">
+                        <a href="{{ route('mailTracker_ClearSearch') }}">
+                            Clear Search
+                        </a>
+                    </div>
+                </form>
+                <hr>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <table class="table table-striped">
+                    <tr>
+                        <th>SMTP</th>
+                        <th>Recipient</th>
+                        <th>Subject</th>
+                        <th>Opens</th>
+                        <th>Clicks</th>
+                        <th>Sent At</th>
+                        <th>View Email</th>
+                        <th>Clicks</th>
+                    </tr>
+                @foreach($emails as $email)
+                    <tr class="{{ $email->report_class }}">
+                      <td>
+                        <a href="{{route('mailTracker_SmtpDetail',$email->id)}}" target="_blank">
+                          {{ str_limit($email->smtp_info, 20) }}
+                        </a>
+                      </td>
+                      <td>{{$email->recipient}}</td>
+                      <td>{{$email->subject}}</td>
+                      <td>{{$email->opens}}</td>
+                      <td>{{$email->clicks}}</td>
+                      <td>{{$email->created_at->format(config('mail-tracker.date-format'))}}</td>
+                      <td>
+                          <a href="{{route('mailTracker_ShowEmail',$email->id)}}" target="_blank">
+                            View
+                          </a>
+                      </td>
+                      <td>
+                          @if($email->clicks > 0)
+                              <a href="{{route('mailTracker_UrlDetail',$email->id)}}">Url Report</a>
                           @else
-                              Not Clicks
-                      @endif
-                  </td>
-              </tr>
-          @endforeach
-      </table>
+                              No Clicks
+                          @endif
+                      </td>
+                    </tr>
+                @endforeach
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12 text-center">
+                {!! $emails->render() !!}
+            </div>
+        </div>
     </div>
 @endsection

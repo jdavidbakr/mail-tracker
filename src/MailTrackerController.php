@@ -7,7 +7,7 @@ use Response;
 use Event;
 
 use App\Http\Requests;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 use jdavidbakr\MailTracker\Events\ViewEmailEvent;
 use jdavidbakr\MailTracker\Events\LinkClickedEvent;

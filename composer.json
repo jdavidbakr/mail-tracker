@@ -17,13 +17,18 @@
         }
     ],
     "require": {
+        "laravel/framework": ">=5.3.23",
+        "guzzlehttp/guzzle": "^5.3.1|^6.2.1",
         "illuminate/support": "~5.1",
+        "aws/aws-sdk-php-laravel": "~3.0",
+        "aws/aws-php-sns-message-validator": "^1.1",
         "php" : "~5.5|~7.0"
     },
     "require-dev": {
         "phpunit/phpunit" : "4.*",
         "scrutinizer/ocular": "~1.1",
-        "squizlabs/php_codesniffer": "~2.3"
+        "squizlabs/php_codesniffer": "~2.3",
+        "orchestra/testbench-browser-kit": "~3.0"
     },
     "suggest": {
         "fedeisas/laravel-mail-css-inliner": "Automatically inlines CSS into all outgoing mail."

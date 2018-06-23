@@ -6,12 +6,31 @@
 
 MailTracker will hook into all outgoing emails from Laravel/Lumen and inject a tracking code into it.  It will also store the rendered email in the database.  There is also an interface to view sent emails.
 
+## NOTE: For Laravel < 5.3.23 you MUST use version 2.0 or earlier.
+
+## Upgrade from 2.0 or earlier
+
+First, upgrade to version 2.1 by running:
+
+``` bash
+$ composer require jdavidbakr/mail-tracker ~2.1
+```
+
+If you are updating from an earlier version, you will need to update the config file and run the new migrations.  For best results, make a backup copy of config/mail-tracker.php and the views in resources/views/vendor/emailTrackingViews (if they exists) to restore any values you have customized, then delete that file and run
+
+``` bash
+$ php artisan vendor:publish
+$ php artisan migrate
+```
+
+Also note that the migration for the `sent_emails_url_clicked` table changed with version 2.1.13.  The change is that the URL column is now a `TEXT` field to allow for longer URLs.  If you have an old system you may want to manually change that column; there is no migration included to perform that update.
+
 ## Install (Laravel)
 
 Via Composer
 
 ``` bash
-$ composer require jdavidbakr/mail-tracker
+$ composer require jdavidbakr/mail-tracker ~2.1
 ```
 
 Add the following to the providers array in config/app.php:
@@ -22,7 +41,7 @@ jdavidbakr\MailTracker\MailTrackerServiceProvider::class,
 
 Publish the config file and migration
 ``` bash
-$ php artisan vendor:publish --provider='jdavidbakr\MailTracker\MailTrackerServiceProvider'
+$ php artisan vendor:publish --provider="jdavidbakr\MailTracker\MailTrackerServiceProvider"
 ```
 
 Run the migration
@@ -30,12 +49,15 @@ Run the migration
 $ php artisan migrate
 ```
 
+Note: If you would like to use a different connection to store your models, 
+you should update the mail-tracker.php config entry ```connection``` before running the migrations. 
+
 ## Install (Lumen)
 
 Via Composer
 
 ``` bash
-$ composer require jdavidbakr/mail-tracker
+$ composer require jdavidbakr/mail-tracker ~2.1
 ```
 
 Register the following service provider in bootstrap/app.php
@@ -51,6 +73,9 @@ Run the migration
 $ php artisan migrate
 ```
 
+Note: If you would like to use a different connection to store your models, 
+you should update the mail-tracker.php config entry ```connection``` before running the migrations.
+
 ## Usage
 
 Once installed, all outgoing mail will be logged to the database.  The following config options are available in config/mail-tracker.php:
@@ -64,12 +89,26 @@ Once installed, all outgoing mail will be logged to the database.  The following
 * **admin-template**: The params for the Admin Panel and Views. You can integrate your existing Admin Panel with the MailTracker admin panel.
 * **date-format**: You can define the format to show dates in the Admin Panel.
 
+If you do not wish to have an email tracked, then you can add the ```X-No-Track``` header to your message.  Put any random string into this header to prevent the tracking from occurring.  The header will be removed from the email prior to being sent.
+
+``` php
+\Mail::send('email.test', [], function ($message) {
+    // ... other settings here
+    $message->getHeaders()->addTextHeader('X-No-Track',str_random(10));
+});
+```
+
 ## Events
 
-When an email is viewed or a link is clicked, its tracking information is counted in the database using the jdavidbark\MailTracker\Model\SentEmail model. You may want to do additional processing on these events, so an event is fired in both cases:
+When an email is sent, viewed, or a link is clicked, its tracking information is counted in the database using the jdavidbakr\MailTracker\Model\SentEmail model. You may want to do additional processing on these events, so an event is fired in these cases:
 
+* jdavidbakr\MailTracker\Events\EmailSentEvent
 * jdavidbakr\MailTracker\Events\ViewEmailEvent
 * jdavidbakr\MailTracker\Events\LinkClickedEvent
+
+If you are using the Amazon SNS notification system, an event is fired when you receive a permanent bounce.  You may want to mark the email as bad or remove it from your database.
+
+* jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent
 
 To install an event listener, you will want to create a file like the following:
 
@@ -105,6 +144,38 @@ class EmailViewed
 }
 ```
 
+``` php
+<?php
+
+namespace App\Listeners;
+
+use jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent;
+
+class BouncedEmail
+{
+    /**
+     * Create the event listener.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the event.
+     *
+     * @param  PermanentBouncedMessageEvent  $event
+     * @return void
+     */
+    public function handle(PermanentBouncedMessageEvent $event)
+    {
+        // Access the email address using $event->email_address...
+    }
+}
+```
+
 Then you must register the event in your \App\Providers\EventServiceProvider $listen array:
 
 ``` php
@@ -117,8 +188,49 @@ protected $listen = [
     'jdavidbakr\MailTracker\Events\ViewEmailEvent' => [
         'App\Listeners\EmailViewed',
     ],
+    'jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent' => [
+        'App\Listeners\BouncedEmail',
+    ],
 ];
 ```
+
+### Passing data to the event listeners
+
+Often times you may need to link a sent email to another model.  The best way to handle this is to add a header to your outgoing email that you can retrieve in your event listener.  Here is an example:
+
+``` php
+/**
+ * Send an email and do processing on a model with the email
+ */
+\Mail::send('email.test', [], function ($message) use($email, $subject, $name, $model) {
+    $message->from('from@johndoe.com', 'From Name');
+    $message->sender('sender@johndoe.com', 'Sender Name');
+    $message->to($email, $name);
+    $message->subject($subject);
+
+    // Create a custom header that we can later retrieve
+    $message->getHeaders()->addTextHeader('X-Model-ID',$model->id);
+});
+```
+
+and then in your event listener:
+
+```
+public function handle(EmailSentEvent $event)
+{
+    $tracker = $event->sent_email;
+    $model_id = $event->sent_email->getHeader('X-Model-ID');
+    $model = Model::find($model_id);
+    // Perform your tracking/linking tasks on $model knowing the SentEmail object
+}
+```
+
+Note that the headers you are attaching to the email are actually going out with the message, so do not store any data that you wouldn't want to expose to your email recipients.
+
+## Amazon SES features
+
+If you use Amazon SES, you can add some additional information to your tracking.  To set up the SES callbacks, first set up SES notifications under your domain in the SES control panel.  Then subscribe to the topic by going to the admin panel of the notification topic and creating a subscription for the URL you copied from the admin page.  The system should immediately respond to the subscription request.  If you like, you can use multiple subscriptions (i.e. one for delivery, one for bounces).  See above for events that are fired on a failed message.  **For added security, it is recommended to set the topic ARN into the mail-tracker config.**
+
 ## Views
 
 When you do the php artisan vendor:publish simple views will add to your resources/views/vendor/emailTrakingViews and you can customize.
@@ -130,8 +242,7 @@ The route name is 'mailTracker_Index'. The standard admin panel route is located
 You can use route names to include them into your existing admin menu.
 You can customize your route in the config file.
 You can see all sent emails, total opens, total urls clicks, show individuals emails and show the urls clicked details.
-Also you can send emails from your admin panel.
-All views (email tamplates, panel) can customize in resources/views/vendor/emailTrakingViews.
+All views (email tamplates, panel) can be customized in resources/views/vendor/emailTrakingViews.
 
 ## Contributing
 
@@ -150,12 +261,12 @@ If you discover any security related issues, please email me@jdavidbaker.com ins
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
-[ico-version]: https://img.shields.io/packagist/v/jdavidbakr/MailTracker.svg?style=flat-square
+[ico-version]: https://img.shields.io/packagist/v/jdavidbakr/mail-tracker.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 [ico-travis]: https://img.shields.io/travis/jdavidbakr/MailTracker/master.svg?style=flat-square
 [ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/jdavidbakr/MailTracker.svg?style=flat-square
 [ico-code-quality]: https://img.shields.io/scrutinizer/g/jdavidbakr/MailTracker.svg?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/jdavidbakr/MailTracker.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/jdavidbakr/mail-tracker.svg?style=flat-square
 
 [link-packagist]: https://packagist.org/packages/jdavidbakr/mail-tracker
 [link-travis]: https://travis-ci.org/jdavidbakr/MailTracker

@@ -3,10 +3,9 @@
 namespace jdavidbakr\MailTracker\Events;
 
 use jdavidbakr\MailTracker\Model\SentEmail;
-use App\Events\Event;
 use Illuminate\Queue\SerializesModels;
 
-class LinkClickedEvent extends Event
+class LinkClickedEvent
 {
     use SerializesModels;
 

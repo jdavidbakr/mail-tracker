@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Response;
 
 use App\Http\Requests;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
@@ -17,13 +17,48 @@ use Mail;
 class AdminController extends Controller
 {
     /**
+     * Sent email search
+     */
+    public function postSearch(Request $request)
+    {
+        session(['mail-tracker-index-search'=>$request->search]);
+        return redirect(route('mailTracker_Index'));
+    }
+
+    /**
+     * Clear search
+     */
+    public function clearSearch()
+    {
+        session(['mail-tracker-index-search'=>null]);
+        return redirect(route('mailTracker_Index'));
+    }
+
+    /**
      * Index.
      *
      * @return \Illuminate\Http\Response
      */
     public function getIndex()
     {
-        $emails = SentEmail::all();
+        session(['mail-tracker-index-page'=>request()->page]);
+        $search = session('mail-tracker-index-search');
+
+        $query = SentEmail::query();
+
+        if($search) {
+            $terms = explode(" ",$search);
+            foreach($terms as $term) {
+                $query->where(function($q) use($term) {
+                    $q->where('sender','like','%'.$term.'%')
+                        ->orWhere('recipient','like','%'.$term.'%')
+                        ->orWhere('subject','like','%'.$term.'%');
+                });
+            }
+        }
+        $query->orderBy('created_at','desc');
+
+        $emails = $query->paginate(config('mail-tracker.emails-per-page'));
 
         return \View('emailTrakingViews::index')->with('emails', $emails);
     }
@@ -47,43 +82,23 @@ class AdminController extends Controller
     public function getUrlDetail($id)
     {
         $detalle = SentEmailUrlClicked::where('sent_email_id',$id)->get();
+        if(!$detalle) {
+            return back();
+        }
         return \View('emailTrakingViews::url_detail')->with('details', $detalle);
     }
 
     /**
-     * New Email.
+     * SMTP Detail.
      *
      * @return \Illuminate\Http\Response
      */
-    public function getNewEmail()
+    public function getSMTPDetail($id)
     {
-
-        return view('emailTrakingViews::email_form');
-    }
-
-    /**
-     * Send Email.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getSendEmail(Request $request)
-    {
-
-        $data = [
-            'name' => $request->name,
-            'to' => $request->email,
-            'message' => $request->message
-        ];
-        Mail::send('emailTrakingViews::emails/mensaje', ['data' => $data], function($message) use ($data){
-            $message->from(config('mail.from.address'), config('mail.from.name'));
-            $message->to($data['to'], $data['name']);
-            // $message->cc('cc@johndoe.com', 'CC Name');
-		    // $message->bcc('bcc@johndoe.com', 'BCC Name');
-		    // $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
-		    // $message->priority(3);
-            $message->subject('New Message from '. config('mail-tracker.name') );
-        });
-        \Log::notice('Email Sent to: '.$data['to'] . ' - '. $data['name']);
-        return redirect()->route('mailTracker_Index');
+        $detalle = SentEmail::find($id);
+        if(!$detalle) {
+            return back();
+        }
+        return \View('emailTrakingViews::smtp_detail')->with('details', $detalle);
     }
 }
