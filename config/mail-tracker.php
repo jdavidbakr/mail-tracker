@@ -4,17 +4,17 @@ return [
     /**
      * To disable the pixel injection, set this to false.
      */
-    'inject-pixel'=>true,
+    'inject-pixel' => true,
 
     /**
      * To disable injecting tracking links, set this to false.
      */
-    'track-links'=>true,
+    'track-links' => true,
 
     /**
      * Optionally expire old emails, set to 0 to keep forever.
      */
-    'expire-days'=>60,
+    'expire-days' => 60,
 
     /**
      * Where should the pingback URL route be?
@@ -28,8 +28,9 @@ return [
      * Where should the admin route be?
      */
     'admin-route' => [
+        'enabled' => true, // Should the admin routes be enabled?
         'prefix' => 'email-manager',
-        'middleware' => ['web','super'],
+        'middleware' => ['web', 'super'],
     ],
 
     /**
@@ -47,7 +48,7 @@ return [
     /**
      * Number of emails per page in the admin view
      */
-    'emails-per-page'=>30,
+    'emails-per-page' => 30,
 
     /**
      * Date Format

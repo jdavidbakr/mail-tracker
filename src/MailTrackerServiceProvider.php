@@ -115,25 +115,27 @@ class MailTrackerServiceProvider extends ServiceProvider
         $config_admin = $this->app['config']->get('mail-tracker.admin-route', []);
         $config_admin['namespace'] = 'jdavidbakr\MailTracker';
 
-        if (!$this->isLumen()) {
-            Route::group($config_admin, function () {
-                Route::get('/', 'AdminController@getIndex')->name('mailTracker_Index');
-                Route::post('search', 'AdminController@postSearch')->name('mailTracker_Search');
-                Route::get('clear-search', 'AdminController@clearSearch')->name('mailTracker_ClearSearch');
-                Route::get('show-email/{id}', 'AdminController@getShowEmail')->name('mailTracker_ShowEmail');
-                Route::get('url-detail/{id}', 'AdminController@getUrlDetail')->name('mailTracker_UrlDetail');
-                Route::get('smtp-detail/{id}', 'AdminController@getSmtpDetail')->name('mailTracker_SmtpDetail');
-            });
-        } else {
-            $app = $this->app;
-            $app->group($config_admin, function () use ($app) {
-                $app->get('/', 'AdminController@getIndex')->name('mailTracker_Index');
-                $app->post('search', 'AdminController@postSearch')->name('mailTracker_Search');
-                $app->get('clear-search', 'AdminController@clearSearch')->name('mailTracker_ClearSearch');
-                $app->get('show-email/{id}', 'AdminController@getShowEmail')->name('mailTracker_ShowEmail');
-                $app->get('url-detail/{id}', 'AdminController@getUrlDetail')->name('mailTracker_UrlDetail');
-                $app->get('smtp-detail/{id}', 'AdminController@getSmtpDetail')->name('mailTracker_SmtpDetail');
-            });
+        if(array_get($config_admin, 'enabled', true)) {
+            if (!$this->isLumen()) {
+                Route::group($config_admin, function () {
+                    Route::get('/', 'AdminController@getIndex')->name('mailTracker_Index');
+                    Route::post('search', 'AdminController@postSearch')->name('mailTracker_Search');
+                    Route::get('clear-search', 'AdminController@clearSearch')->name('mailTracker_ClearSearch');
+                    Route::get('show-email/{id}', 'AdminController@getShowEmail')->name('mailTracker_ShowEmail');
+                    Route::get('url-detail/{id}', 'AdminController@getUrlDetail')->name('mailTracker_UrlDetail');
+                    Route::get('smtp-detail/{id}', 'AdminController@getSmtpDetail')->name('mailTracker_SmtpDetail');
+                });
+            } else {
+                $app = $this->app;
+                $app->group($config_admin, function () use ($app) {
+                    $app->get('/', 'AdminController@getIndex')->name('mailTracker_Index');
+                    $app->post('search', 'AdminController@postSearch')->name('mailTracker_Search');
+                    $app->get('clear-search', 'AdminController@clearSearch')->name('mailTracker_ClearSearch');
+                    $app->get('show-email/{id}', 'AdminController@getShowEmail')->name('mailTracker_ShowEmail');
+                    $app->get('url-detail/{id}', 'AdminController@getUrlDetail')->name('mailTracker_UrlDetail');
+                    $app->get('smtp-detail/{id}', 'AdminController@getSmtpDetail')->name('mailTracker_SmtpDetail');
+                });
+            }
         }
     }
 }
