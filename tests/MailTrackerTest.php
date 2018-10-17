@@ -109,6 +109,29 @@ class AddressVerificationTest extends TestCase
         $this->assertNull($old_url->fresh());
     }
 
+    public function testSendMessageWithMailRaw()
+    {
+        $faker = Faker\Factory::create();
+        $email = $faker->email;
+        $name = $faker->firstName . ' ' .$faker->lastName;
+        $content = 'Text to e-mail';
+        \View::addLocation(__DIR__);
+
+        Mail::raw($content, function($message) use ($email, $name)
+        {
+            $message->from('from@johndoe.com', 'From Name');
+
+            $message->to($email, $name);
+        });
+
+        $this->seeInDatabase('sent_emails', [
+            'recipient'=>$name.' <'.$email.'>',
+            'sender'=>'From Name <from@johndoe.com>',
+            'recipient'=>"{$name} <{$email}>",
+            'content'=>$content
+        ]);
+    }
+
     /**
      * @test
      */
