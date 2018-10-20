@@ -701,4 +701,28 @@ class AddressVerificationTest extends TestCase
         $this->assertNull($old_email->fresh());
         $this->assertNull($old_url->fresh());
     }
+
+    /**
+     * @test
+     */
+    public function it_can_retrieve_url_clicks_from_eloquent()
+    {
+        Event::fake();
+        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+            'hash' => str_random(32),
+        ]);
+        $message_id = str_random(32);
+        $track->message_id = $message_id;
+        $track->save();
+
+        $urlClick = \jdavidbakr\MailTracker\Model\SentEmailUrlClicked::create([
+            'sent_email_id' => $track->id,
+            'url' => 'https://example.com',
+            'hash' => str_random(32)
+        ]);
+        $urlClick->save();
+        $this->assertTrue($track->urlClicks->count() === 1);
+        $this->assertInstanceOf(\Illuminate\Support\Collection::class, $track->urlClicks);
+        $this->assertInstanceOf(\jdavidbakr\MailTracker\Model\SentEmailUrlClicked::class, $track->urlClicks->first());
+    }
 }

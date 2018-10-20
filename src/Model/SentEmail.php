@@ -113,4 +113,9 @@ class SentEmail extends Model
             });
         return $headers->get($key);
     }
+
+    public function urlClicks()
+    {
+        return $this->hasMany(SentEmailUrlClicked::class);
+    }
 }
