@@ -57,8 +57,8 @@ class MailTrackerController extends Controller
                 ]);
             }
             Event::fire(new LinkClickedEvent($tracker));
-    	}
 
-    	return redirect($url);
+    	    return redirect($url);
+    	}
     }
 }
