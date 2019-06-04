@@ -33,12 +33,6 @@ Via Composer
 $ composer require jdavidbakr/mail-tracker ~2.1
 ```
 
-Add the following to the providers array in config/app.php:
-
-``` php
-jdavidbakr\MailTracker\MailTrackerServiceProvider::class,
-```
-
 Publish the config file and migration
 ``` bash
 $ php artisan vendor:publish --provider="jdavidbakr\MailTracker\MailTrackerServiceProvider"
