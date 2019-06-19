@@ -51,7 +51,7 @@
                 @foreach($emails as $email)
                     <tr class="{{ $email->report_class }}">
                       <td>
-                        <a href="{{route('mailTracker_ShowEmail',$email->id)}}" target="_blank">
+                        <a href="{{route('mailTracker_SmtpDetail',$email->id)}}" target="_blank">
                           {{ str_limit($email->smtp_info, 20) }}
                         </a>
                       </td>

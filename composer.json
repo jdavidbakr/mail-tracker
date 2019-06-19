@@ -25,9 +25,11 @@
         "php" : "~5.5|~7.0"
     },
     "require-dev": {
-        "phpunit/phpunit" : "4.*",
+        "phpunit/phpunit" : "~7.0",
         "scrutinizer/ocular": "~1.1",
-        "squizlabs/php_codesniffer": "~2.3"
+        "squizlabs/php_codesniffer": "~2.3",
+        "orchestra/testbench-browser-kit": "~3.0",
+        "mockery/mockery": "^1.1"
     },
     "suggest": {
         "fedeisas/laravel-mail-css-inliner": "Automatically inlines CSS into all outgoing mail."
@@ -48,6 +50,11 @@
     "extra": {
         "branch-alias": {
             "dev-master": "1.0-dev"
+        },
+        "laravel": {
+            "providers": [
+                "jdavidbakr\\MailTracker\\MailTrackerServiceProvider"
+            ]
         }
     }
 }
