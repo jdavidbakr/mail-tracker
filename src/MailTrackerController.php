@@ -62,6 +62,6 @@ class MailTrackerController extends Controller
             Event::dispatch(new LinkClickedEvent($tracker));
 
     	      return redirect($url);
-    	  }
+    	}
     }
 }
