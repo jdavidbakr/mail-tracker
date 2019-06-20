@@ -85,8 +85,8 @@ class MailTracker implements \Swift_Events_SendListener
 
         $html = preg_replace_callback(
             "/(<a[^>]*href=['\"])([^'\"]*)/",
-                [$this, 'inject_link_callback'],
-                $html
+            [$this, 'inject_link_callback'],
+            $html
         );
 
         return $html;

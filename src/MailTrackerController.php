@@ -2,14 +2,15 @@
 
 namespace jdavidbakr\MailTracker;
 
-use Illuminate\Http\Request;
-use Response;
 use Event;
-
+use Response;
 use App\Http\Requests;
+
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 use jdavidbakr\MailTracker\Events\ViewEmailEvent;
+use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use jdavidbakr\MailTracker\Events\LinkClickedEvent;
 
 class MailTrackerController extends Controller
@@ -41,7 +42,7 @@ class MailTrackerController extends Controller
     {
         $url = base64_decode(str_replace("$", "/", $url));
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            throw new Exceptions\BadUrlLink('Mail hash: '.$hash);
+            throw new BadUrlLink('Mail hash: '.$hash);
         }
         $tracker = Model\SentEmail::where('hash', $hash)
             ->first();
@@ -61,9 +62,9 @@ class MailTrackerController extends Controller
             }
             Event::dispatch(new LinkClickedEvent($tracker));
 
-    	    return redirect($url);
-    	}
+            return redirect($url);
+        }
 
-        abort(403, 'Link has expired');
+        throw new BadUrlLink('Mail hash: '.$hash);
     }
 }

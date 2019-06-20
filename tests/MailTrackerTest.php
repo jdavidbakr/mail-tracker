@@ -6,6 +6,7 @@ use jdavidbakr\MailTracker\MailTracker;
 use Orchestra\Testbench\Exceptions\Handler;
 use Orchestra\Testbench\BrowserKit\TestCase;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class AddressVerificationTest extends TestCase
@@ -277,17 +278,35 @@ class AddressVerificationTest extends TestCase
                 'url' => $redirect,
                 'clicks' => 1,
             ]);
+    }
 
-        $track = $track->fresh();
-        $this->assertEquals($clicks, $track->clicks);
+    /**
+     * @test
+     */
+    public function it_throws_exception_on_invalid_link()
+    {
+        $this->disableExceptionHandling();
+        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+                'hash' => Str::random(32),
+            ]);
+
+        Event::fake();
+
+        $clicks = $track->clicks;
+        $clicks++;
+
+        $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
 
         // Do it with an invalid hash
         $url = action('\jdavidbakr\MailTracker\MailTrackerController@getL', [
                 \jdavidbakr\MailTracker\MailTracker::hash_url($redirect), // Replace slash with dollar sign
                 'bad-hash'
             ]);
-        $this->call('GET', $url);
-        $this->assertRedirectedTo($redirect);
+        try {
+            $this->call('GET', $url);
+        } catch (BadUrlLink $e) {
+            $this->assertEquals('Mail hash: bad-hash', $e->getMessage());
+        }
     }
 
     /**
@@ -303,7 +322,7 @@ class AddressVerificationTest extends TestCase
 
         try {
             $this->call('GET', $url);
-        } catch (jdavidbakr\MailTracker\Exceptions\BadUrlLink $e) {
+        } catch (BadUrlLink $e) {
             $this->assertEquals('Mail hash: the-mail-hash', $e->getMessage());
         }
     }
