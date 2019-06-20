@@ -63,5 +63,7 @@ class MailTrackerController extends Controller
 
     	    return redirect($url);
     	}
+
+        abort(403, 'Link has expired');
     }
 }
