@@ -2,14 +2,15 @@
 
 namespace jdavidbakr\MailTracker;
 
-use Illuminate\Http\Request;
-use Response;
 use Event;
-
+use Response;
 use App\Http\Requests;
+
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 use jdavidbakr\MailTracker\Events\ViewEmailEvent;
+use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use jdavidbakr\MailTracker\Events\LinkClickedEvent;
 
 class MailTrackerController extends Controller
@@ -31,7 +32,7 @@ class MailTrackerController extends Controller
         if ($tracker) {
             $tracker->opens++;
             $tracker->save();
-            Event::fire(new ViewEmailEvent($tracker));
+            Event::dispatch(new ViewEmailEvent($tracker));
         }
 
         return $response;
@@ -40,6 +41,9 @@ class MailTrackerController extends Controller
     public function getL($url, $hash)
     {
         $url = base64_decode(str_replace("$", "/", $url));
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw new BadUrlLink('Mail hash: '.$hash);
+        }
         $tracker = Model\SentEmail::where('hash', $hash)
             ->first();
         if ($tracker) {
@@ -56,9 +60,11 @@ class MailTrackerController extends Controller
                     'hash' => $tracker->hash,
                 ]);
             }
-            Event::fire(new LinkClickedEvent($tracker));
+            Event::dispatch(new LinkClickedEvent($tracker));
+
+            return redirect($url);
         }
 
-        return redirect($url);
+        throw new BadUrlLink('Mail hash: '.$hash);
     }
 }

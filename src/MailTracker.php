@@ -2,10 +2,11 @@
 
 namespace jdavidbakr\MailTracker;
 
-use jdavidbakr\MailTracker\Model\SentEmail;
-use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
-use jdavidbakr\MailTracker\Events\EmailSentEvent;
 use Event;
+use Illuminate\Support\Str;
+use jdavidbakr\MailTracker\Model\SentEmail;
+use jdavidbakr\MailTracker\Events\EmailSentEvent;
+use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
 
 class MailTracker implements \Swift_Events_SendListener
 {
@@ -38,7 +39,7 @@ class MailTracker implements \Swift_Events_SendListener
     {
         // Get the SentEmail object
         $headers = $message->getHeaders();
-        $hash = $headers->get('X-Mailer-Hash')->getFieldBody();
+        $hash = optional($headers->get('X-Mailer-Hash'))->getFieldBody();
         $sent_email = SentEmail::where('hash', $hash)->first();
 
         // Get info about the message-id from SES
@@ -65,7 +66,7 @@ class MailTracker implements \Swift_Events_SendListener
         // Append the tracking url
         $tracking_pixel = '<img border=0 width=1 alt="" height=1 src="'.route('mailTracker_t', [$hash]).'" />';
 
-        $linebreak = str_random(32);
+        $linebreak = Str::random(32);
         $html = str_replace("\n", $linebreak, $html);
 
         if (preg_match("/^(.*<body[^>]*>)(.*)$/", $html, $matches)) {
@@ -84,8 +85,8 @@ class MailTracker implements \Swift_Events_SendListener
 
         $html = preg_replace_callback(
             "/(<a[^>]*href=['\"])([^'\"]*)/",
-                [$this, 'inject_link_callback'],
-                $html
+            [$this, 'inject_link_callback'],
+            $html
         );
 
         return $html;
@@ -122,8 +123,8 @@ class MailTracker implements \Swift_Events_SendListener
      */
     protected function createTrackers($message)
     {
-        foreach ($message->getTo() as $to_email=>$to_name) {
-            foreach ($message->getFrom() as $from_email=>$from_name) {
+        foreach ($message->getTo() as $to_email => $to_name) {
+            foreach ($message->getFrom() as $from_email => $from_name) {
                 $headers = $message->getHeaders();
                 if ($headers->get('X-No-Track')) {
                     // Don't send with this header
@@ -132,7 +133,7 @@ class MailTracker implements \Swift_Events_SendListener
                     continue;
                 }
                 do {
-                    $hash = str_random(32);
+                    $hash = Str::random(32);
                     $used = SentEmail::where('hash', $hash)->count();
                 } while ($used > 0);
                 $headers->addTextHeader('X-Mailer-Hash', $hash);
@@ -154,19 +155,19 @@ class MailTracker implements \Swift_Events_SendListener
                 }
 
                 $tracker = SentEmail::create([
-                    'hash'=>$hash,
-                    'headers'=>$headers->toString(),
-                    'sender'=>$from_name." <".$from_email.">",
-                    'recipient'=>$to_name.' <'.$to_email.'>',
-                    'subject'=>$subject,
-                    'content'=> config('mail-tracker.log-content', true) ? (strlen($original_content) > 65535 ? substr($original_content, 0, 65532) . "..." : $original_content) : null,
-                    'opens'=>0,
-                    'clicks'=>0,
-                    'message_id'=>$message->getId(),
-                    'meta'=>[],
+                    'hash' => $hash,
+                    'headers' => $headers->toString(),
+                    'sender' => $from_name." <".$from_email.">",
+                    'recipient' => $to_name.' <'.$to_email.'>',
+                    'subject' => $subject,
+                    'content' => config('mail-tracker.log-content', true) ? (strlen($original_content) > 65535 ? substr($original_content, 0, 65532) . "..." : $original_content) : null,
+                    'opens' => 0,
+                    'clicks' => 0,
+                    'message_id' => $message->getId(),
+                    'meta' => [],
                 ]);
 
-                Event::fire(new EmailSentEvent($tracker));
+                Event::dispatch(new EmailSentEvent($tracker));
             }
         }
     }

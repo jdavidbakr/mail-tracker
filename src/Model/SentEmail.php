@@ -32,7 +32,7 @@ class SentEmail extends Model
     ];
 
     protected $casts = [
-        'meta'=>'collection',
+        'meta' => 'collection',
     ];
 
     public function getConnectionName()
@@ -102,8 +102,8 @@ class SentEmail extends Model
             ->transform(function ($header) {
                 list($key, $value) = explode(":", $header.":");
                 return collect([
-                    'key'=>trim($key),
-                    'value'=>trim($value)
+                    'key' => trim($key),
+                    'value' => trim($value)
                 ]);
             })->filter(function ($header) {
                 return $header->get('key');
@@ -112,5 +112,10 @@ class SentEmail extends Model
                 return $header->get('value');
             });
         return $headers->get($key);
+    }
+
+    public function urlClicks()
+    {
+        return $this->hasMany(SentEmailUrlClicked::class);
     }
 }

@@ -20,7 +20,7 @@ class AdminController extends Controller
      */
     public function postSearch(Request $request)
     {
-        session(['mail-tracker-index-search'=>$request->search]);
+        session(['mail-tracker-index-search' => $request->search]);
         return redirect(route('mailTracker_Index'));
     }
 
@@ -29,7 +29,7 @@ class AdminController extends Controller
      */
     public function clearSearch()
     {
-        session(['mail-tracker-index-search'=>null]);
+        session(['mail-tracker-index-search' => null]);
         return redirect(route('mailTracker_Index'));
     }
 
@@ -40,7 +40,7 @@ class AdminController extends Controller
      */
     public function getIndex()
     {
-        session(['mail-tracker-index-page'=>request()->page]);
+        session(['mail-tracker-index-page' => request()->page]);
         $search = session('mail-tracker-index-search');
 
         $query = SentEmail::query();

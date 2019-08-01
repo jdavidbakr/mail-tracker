@@ -4,7 +4,7 @@
 [![Software License][ico-license]](LICENSE.md)
 [![Total Downloads][ico-downloads]][link-downloads]
 
-MailTracker will hook into all outgoing emails from Laravel/Lumen and inject a tracking code into it.  It will also store the rendered email in the database.  There is also an interface to view sent emails.
+MailTracker will hook into all outgoing emails from Laravel and inject a tracking code into it.  It will also store the rendered email in the database.  There is also an interface to view sent emails.
 
 ## NOTE: For Laravel < 5.3.23 you MUST use version 2.0 or earlier.
 
@@ -25,18 +25,12 @@ $ php artisan migrate
 
 Also note that the migration for the `sent_emails_url_clicked` table changed with version 2.1.13.  The change is that the URL column is now a `TEXT` field to allow for longer URLs.  If you have an old system you may want to manually change that column; there is no migration included to perform that update.
 
-## Install (Laravel)
+## Install
 
 Via Composer
 
 ``` bash
 $ composer require jdavidbakr/mail-tracker ~2.1
-```
-
-Add the following to the providers array in config/app.php:
-
-``` php
-jdavidbakr\MailTracker\MailTrackerServiceProvider::class,
 ```
 
 Publish the config file and migration
@@ -51,30 +45,6 @@ $ php artisan migrate
 
 Note: If you would like to use a different connection to store your models, 
 you should update the mail-tracker.php config entry ```connection``` before running the migrations. 
-
-## Install (Lumen)
-
-Via Composer
-
-``` bash
-$ composer require jdavidbakr/mail-tracker ~2.1
-```
-**Only in Laravel < 5.5**  
-Register the following service provider in bootstrap/app.php  
-
-``` php
-jdavidbakr\MailTracker\MailTrackerServiceProvider::class
-```
-
-Copy vendor/jdavidbakr/mail-tracker/migrations/2016_03_01_193027_create_sent_emails_table.php and vendor/jdavidbakr/mail-tracker/config/mail-tracker.php to your respective migrations and config folders. You may have to create a config folder if it doesn't already exist.
-
-Run the migration
-``` bash
-$ php artisan migrate
-```
-
-Note: If you would like to use a different connection to store your models, 
-you should update the mail-tracker.php config entry ```connection``` before running the migrations.
 
 ## Usage
 
@@ -94,7 +64,7 @@ If you do not wish to have an email tracked, then you can add the ```X-No-Track`
 ``` php
 \Mail::send('email.test', [], function ($message) {
     // ... other settings here
-    $message->getHeaders()->addTextHeader('X-No-Track',str_random(10));
+    $message->getHeaders()->addTextHeader('X-No-Track',Str::random(10));
 });
 ```
 
@@ -232,6 +202,12 @@ public function handle(EmailSentEvent $event)
 ```
 
 Note that the headers you are attaching to the email are actually going out with the message, so do not store any data that you wouldn't want to expose to your email recipients.
+
+## Exceptions
+
+The following exceptions may be thrown.  You may add them to your ignore list in your exception handler, or handle them as you wish.
+
+* jdavidbakr\MailTracker\Exceptions\BadUrlLink - the base64 decode of the URL parameter failed to return a valid redirect link. This may happen if somehow the URL gets truncated or is forged.
 
 ## Amazon SES features
 
