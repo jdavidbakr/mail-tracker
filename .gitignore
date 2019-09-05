@@ -2,3 +2,5 @@ vendor
 setup-test-variables.sh
 .idea
 .php_cs.cache
+.phpunit.result.cache
+composer.lock
