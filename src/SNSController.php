@@ -64,7 +64,7 @@ class SNSController extends Controller
             case 'Complaint':
                 $this->process_complaint($message);
                 foreach ($message->complaint->complainedRecipients as $recipient) {
-                    Event::dispatch(new PermanentBouncedMessageEvent($recipient->emailAddress));
+                    Event::dispatch(new ComplaintMessageEvent($recipient->emailAddress));
                 }
                 break;
         }
