@@ -8,7 +8,9 @@ use App\Http\Requests;
 use Illuminate\Routing\Controller;
 use Event;
 use jdavidbakr\MailTracker\Model\SentEmail;
+use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
 use jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent;
+use jdavidbakr\MailTracker\Events\ComplaintMessageEvent;
 use Aws\Sns\Message as SNSMessage;
 use Aws\Sns\MessageValidator as SNSMessageValidator;
 use GuzzleHttp\Client as Guzzle;
@@ -30,7 +32,7 @@ class SNSController extends Controller
         if (config('mail-tracker.sns-topic') && $message->offsetGet('TopicArn') != config('mail-tracker.sns-topic')) {
             return 'invalid topic ARN';
         }
-        
+
         switch ($message->offsetGet('Type')) {
             case 'SubscriptionConfirmation':
                 return $this->confirm_subscription($message);
@@ -55,17 +57,9 @@ class SNSController extends Controller
                 break;
             case 'Bounce':
                 $this->process_bounce($message);
-                if ($message->bounce->bounceType == 'Permanent') {
-                    foreach ($message->bounce->bouncedRecipients as $recipient) {
-                        Event::dispatch(new PermanentBouncedMessageEvent($recipient->emailAddress));
-                    }
-                }
                 break;
             case 'Complaint':
                 $this->process_complaint($message);
-                foreach ($message->complaint->complainedRecipients as $recipient) {
-                    Event::dispatch(new PermanentBouncedMessageEvent($recipient->emailAddress));
-                }
                 break;
         }
         return 'notification processed';
@@ -79,8 +73,13 @@ class SNSController extends Controller
             $meta->put('smtpResponse', $message->delivery->smtpResponse);
             $meta->put('success', true);
             $meta->put('delivered_at', $message->delivery->timestamp);
+            $meta->put('sns_message_delivery', $message); // append the full message received from SNS to the 'meta' field
             $sent_email->meta = $meta;
             $sent_email->save();
+        }
+
+        foreach ($message->delivery->recipients as $recipient) {
+            Event::dispatch(new EmailDeliveredEvent($recipient, $sent_email));
         }
     }
 
@@ -98,15 +97,21 @@ class SNSController extends Controller
             }
             $meta->put('failures', $current_codes);
             $meta->put('success', false);
+            $meta->put('sns_message_bounce', $message); // append the full message received from SNS to the 'meta' field
             $sent_email->meta = $meta;
             $sent_email->save();
+        }
+
+        if ($message->bounce->bounceType == 'Permanent') {
+            foreach ($message->bounce->bouncedRecipients as $recipient) {
+                Event::dispatch(new PermanentBouncedMessageEvent($recipient->emailAddress, $sent_email));
+            }
         }
     }
 
     public function process_complaint($message)
     {
-        $message_id = $message->mail->messageId;
-        $sent_email = SentEmail::where('message_id', $message_id)->first();
+        $sent_email = SentEmail::where('message_id', $message->mail->messageId)->first();
         if ($sent_email) {
             $meta = collect($sent_email->meta);
             $meta->put('complaint', true);
@@ -115,8 +120,13 @@ class SNSController extends Controller
             if (!empty($message->complaint->complaintFeedbackType)) {
                 $meta->put('complaint_type', $message->complaint->complaintFeedbackType);
             }
+            $meta->put('sns_message_complaint', $message); // append the full message received from SNS to the 'meta' field
             $sent_email->meta = $meta;
             $sent_email->save();
+        }
+
+        foreach ($message->complaint->complainedRecipients as $recipient) {
+            Event::dispatch(new ComplaintMessageEvent($recipient->emailAddress, $sent_email));
         }
     }
 }

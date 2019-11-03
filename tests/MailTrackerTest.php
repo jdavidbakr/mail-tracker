@@ -669,7 +669,7 @@ class MailTrackerTest extends TestCase
         $track = $track->fresh();
         $meta = $track->meta;
         $this->assertFalse($meta->get('success'));
-        Event::assertDispatched(jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent::class, function ($event) {
+        Event::assertDispatched(jdavidbakr\MailTracker\Events\ComplaintMessageEvent::class, function ($event) {
             return $event->email_address == 'recipient@example.com';
         });
     }/** @noinspection ProblematicWhitespace */

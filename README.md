@@ -85,9 +85,10 @@ When an email is sent, viewed, or a link is clicked, its tracking information is
 -   jdavidbakr\MailTracker\Events\ViewEmailEvent
 -   jdavidbakr\MailTracker\Events\LinkClickedEvent
 
-If you are using the Amazon SNS notification system, an event is fired when you receive a permanent bounce. You may want to mark the email as bad or remove it from your database.
-
--   jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent
+If you are using the Amazon SNS notification system, these events are fired so you can do additional processing.
+-   jdavidbakr\MailTracker\Events\EmailDeliveredEvent (when you received a "message delivered" event, you may want to mark the email as "good" or "delivered" in your database)
+-   jdavidbakr\MailTracker\Events\ComplaintMessageEvent (when you received a complaint, ex: marked as "spam", you may want to remove the email from your database)
+-   jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent (when you receive a permanent bounce, you may want to mark the email as bad or remove it from your database)
 
 To install an event listener, you will want to create a file like the following:
 
@@ -155,7 +156,7 @@ class BouncedEmail
 }
 ```
 
-Then you must register the event in your \App\Providers\EventServiceProvider \$listen array:
+Then you must register the events you want to act on in your \App\Providers\EventServiceProvider \$listen array:
 
 ```php
 /**
@@ -164,8 +165,20 @@ Then you must register the event in your \App\Providers\EventServiceProvider \$l
  * @var array
  */
 protected $listen = [
+    'jdavidbakr\MailTracker\Events\EmailSentEvent' => [
+        'App\Listeners\EmailSent',
+    ],
     'jdavidbakr\MailTracker\Events\ViewEmailEvent' => [
         'App\Listeners\EmailViewed',
+    ],
+    'jdavidbakr\MailTracker\Events\LinkClickedEvent' => [
+        'App\Listeners\EmailLinkClicked',
+    ],
+    'jdavidbakr\MailTracker\Events\EmailDeliveredEvent' => [
+        'App\Listeners\EmailDelivered',
+    ],
+    'jdavidbakr\MailTracker\Events\ComplaintMessageEvent' => [
+        'App\Listeners\EmailComplaint',
     ],
     'jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent' => [
         'App\Listeners\BouncedEmail',

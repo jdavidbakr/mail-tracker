@@ -5,7 +5,7 @@ namespace jdavidbakr\MailTracker\Events;
 use jdavidbakr\MailTracker\Model\SentEmail;
 use Illuminate\Queue\SerializesModels;
 
-class PermanentBouncedMessageEvent
+class EmailDeliveredEvent
 {
     use SerializesModels;
 
