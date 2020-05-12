@@ -2,7 +2,7 @@
 
 namespace jdavidbakr\MailTracker;
 
-use Event;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Events\EmailSentEvent;
