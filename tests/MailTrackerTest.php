@@ -281,6 +281,7 @@ class MailTrackerTest extends SetUpTest
     public function it_retrieves_the_mesage_id_from_ses_mail_default()
     {
         Config::set('mail.default', 'ses');
+        Config::set('mail.driver', null);
         $headers = Mockery::mock();
         $headers->shouldReceive('get')
             ->with('X-No-Track')
@@ -345,6 +346,7 @@ class MailTrackerTest extends SetUpTest
     public function it_retrieves_the_mesage_id_from_ses_mail_driver()
     {
         Config::set('mail.driver', 'ses');
+        Config::set('mail.default', null);
         $headers = Mockery::mock();
         $headers->shouldReceive('get')
             ->with('X-No-Track')
