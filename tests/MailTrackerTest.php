@@ -278,7 +278,71 @@ class MailTrackerTest extends SetUpTest
      * Note that to complete this test, you must have aws credentials as well as a valid
      * from address in the mail config.
      */
-    public function it_retrieves_the_mesage_id_from_ses()
+    public function it_retrieves_the_mesage_id_from_ses_mail_default()
+    {
+        Config::set('mail.default', 'ses');
+        $headers = Mockery::mock();
+        $headers->shouldReceive('get')
+            ->with('X-No-Track')
+            ->once()
+            ->andReturn(null);
+        $this->mailer_hash = '';
+        $headers->shouldReceive('addTextHeader')
+            ->once()
+            ->andReturnUsing(function ($key, $value) {
+                $this->mailer_hash = $value;
+            });
+        $mailer_hash_header = Mockery::mock();
+        $mailer_hash_header->shouldReceive('getFieldBody')
+            ->once()
+            ->andReturnUsing(function () {
+                return $this->mailer_hash;
+            });
+        $headers->shouldReceive('get')
+            ->with('X-Mailer-Hash')
+            ->once()
+            ->andReturn($mailer_hash_header);
+        $headers->shouldReceive('get')
+            ->with('X-SES-Message-ID')
+            ->once()
+            ->andReturn(Mockery::mock([
+                'getFieldBody' => 'aws-mailer-hash'
+            ]));
+        $headers->shouldReceive('toString')
+            ->once();
+        $event = Mockery::mock(\Swift_Events_SendEvent::class, [
+            'getMessage' => Mockery::mock([
+                'getTo' => [
+                    'destination@example.com' => 'Destination Person'
+                ],
+                'getFrom' => [
+                    'from@example.com' => 'From Name'
+                ],
+                'getHeaders' => $headers,
+                'getSubject' => 'The message subject',
+                'getBody' => 'The body',
+                'getContentType' => 'text/html',
+                'setBody' => null,
+                'getChildren' => [],
+                'getId' => 'message-id',
+            ]),
+        ]);
+        $tracker = new MailTracker();
+
+        $tracker->beforeSendPerformed($event);
+        $tracker->sendPerformed($event);
+
+        $sent_email = \jdavidbakr\MailTracker\Model\SentEmail::orderBy('id', 'desc')->first();
+        $this->assertEquals('aws-mailer-hash', $sent_email->message_id);
+    }
+
+    /**
+     * @test
+     *
+     * Note that to complete this test, you must have aws credentials as well as a valid
+     * from address in the mail config.
+     */
+    public function it_retrieves_the_mesage_id_from_ses_mail_driver()
     {
         Config::set('mail.driver', 'ses');
         $headers = Mockery::mock();
