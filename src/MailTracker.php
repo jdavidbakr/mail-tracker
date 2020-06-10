@@ -29,7 +29,7 @@ class MailTracker implements \Swift_Events_SendListener
     public function sendPerformed(\Swift_Events_SendEvent $event)
     {
         // If this was sent through SES, retrieve the data
-        if (config('mail.driver') == 'ses') {
+        if (config('mail.default', config('mail.driver')) == 'ses') {
             $message = $event->getMessage();
             $this->updateSesMessageId($message);
         }
