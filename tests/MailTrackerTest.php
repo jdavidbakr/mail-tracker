@@ -688,7 +688,7 @@ class MailTrackerTest extends SetUpTest
         $matches = null;
         preg_match_all('/(<a[^>]*href=[\"])([^\"]*)/', $body, $matches);
         $links = $matches[2];
-        $aLink = $links[1];
+        $aLink = $links[0];
 
         $expected_url = "http://www.google.com?q=foo'bar";
         $this->assertNotNull($aLink);
