@@ -6,6 +6,7 @@
         "jdavidbakr",
         "MailTracker"
     ],
+    "minimum-stability": "dev",
     "homepage": "https://github.com/jdavidbakr/MailTracker",
     "license": "MIT",
     "authors": [
@@ -17,15 +18,15 @@
         }
     ],
     "require": {
-        "php": ">=7.2.5",
-        "laravel/framework": "~7.0",
+        "php": ">=7.2.0",
+        "illuminate/support": "~7.0|~8.0",
         "guzzlehttp/guzzle": "^5.3.1|^6.2.1",
         "aws/aws-php-sns-message-validator": "^1.1",
         "aws/aws-sdk-php": "^3.133"
     },
     "require-dev": {
         "phpunit/phpunit": "~8.0",
-        "orchestra/testbench": "~5.0",
+        "orchestra/testbench": "~5.0|~6.0",
         "mockery/mockery": "^1.1"
     },
     "suggest": {
