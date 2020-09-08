@@ -30,6 +30,7 @@ use jdavidbakr\MailTracker\Events\ViewEmailEvent;
 use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use jdavidbakr\MailTracker\Events\LinkClickedEvent;
 use Aws\Sns\MessageValidator as SNSMessageValidator;
+use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
 use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use jdavidbakr\MailTracker\Events\ComplaintMessageEvent;
@@ -60,10 +61,10 @@ class MailTrackerTest extends SetUpTest
     {
         // Create an old email to purge
         Config::set('mail-tracker.expire-days', 1);
-        $old_email = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $old_email = SentEmail::create([
                 'hash' => Str::random(32),
             ]);
-        $old_url = \jdavidbakr\MailTracker\Model\SentEmailUrlClicked::create([
+        $old_url = SentEmailUrlClicked::create([
                 'sent_email_id' => $old_email->id,
                 'hash' => Str::random(32),
             ]);
@@ -193,7 +194,7 @@ class MailTrackerTest extends SetUpTest
     {
         Config::set('mail-tracker.tracker-queue', 'alt-queue');
         Bus::fake();
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $track = SentEmail::create([
                 'hash' => Str::random(32),
             ]);
         $pings = $track->opens;
@@ -213,7 +214,7 @@ class MailTrackerTest extends SetUpTest
     {
         Config::set('mail-tracker.tracker-queue', 'alt-queue');
         Bus::fake();
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $track = SentEmail::create([
                 'hash' => Str::random(32),
             ]);
         $clicks = $track->clicks;
@@ -237,7 +238,7 @@ class MailTrackerTest extends SetUpTest
     {
         Config::set('mail-tracker.tracker-queue', 'alt-queue');
         Bus::fake();
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $track = SentEmail::create([
                 'hash' => Str::random(32),
             ]);
         $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
@@ -263,7 +264,7 @@ class MailTrackerTest extends SetUpTest
     {
         $this->disableExceptionHandling();
         $this->expectException(BadUrlLink::class);
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $track = SentEmail::create([
                 'hash' => Str::random(32),
             ]);
 
@@ -360,7 +361,7 @@ class MailTrackerTest extends SetUpTest
         $tracker->beforeSendPerformed($event);
         $tracker->sendPerformed($event);
 
-        $sent_email = \jdavidbakr\MailTracker\Model\SentEmail::orderBy('id', 'desc')->first();
+        $sent_email = SentEmail::orderBy('id', 'desc')->first();
         $this->assertEquals('aws-mailer-hash', $sent_email->message_id);
     }
 
@@ -428,7 +429,7 @@ class MailTrackerTest extends SetUpTest
         $tracker->beforeSendPerformed($event);
         $tracker->sendPerformed($event);
 
-        $sent_email = \jdavidbakr\MailTracker\Model\SentEmail::orderBy('id', 'desc')->first();
+        $sent_email = SentEmail::orderBy('id', 'desc')->first();
         $this->assertEquals('aws-mailer-hash', $sent_email->message_id);
     }
 
@@ -668,7 +669,7 @@ class MailTrackerTest extends SetUpTest
             'clicks' => 1,
         ]);
 
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::whereHash($hash)->first();
+        $track = SentEmail::whereHash($hash)->first();
         $this->assertNotNull($track);
         $this->assertEquals(1, $track->clicks);
     }
@@ -728,7 +729,7 @@ class MailTrackerTest extends SetUpTest
             'clicks' => 1,
         ]);
 
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::whereHash($hash)->first();
+        $track = SentEmail::whereHash($hash)->first();
         $this->assertNotNull($track);
         $this->assertEquals(1, $track->clicks);
     }
@@ -766,7 +767,7 @@ class MailTrackerTest extends SetUpTest
         } catch (Swift_TransportException $e) {
         }
 
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::orderBy('id', 'desc')->first();
+        $track = SentEmail::orderBy('id', 'desc')->first();
         $this->assertEquals($header_test, $track->getHeader('X-Header-Test'));
     }
 
@@ -782,10 +783,10 @@ class MailTrackerTest extends SetUpTest
         $this->app['migrator']->setConnection('secondary');
         $this->artisan('migrate', ['--database' => 'secondary']);
 
-        $old_email = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $old_email = SentEmail::create([
             'hash' => Str::random(32),
         ]);
-        $old_url = \jdavidbakr\MailTracker\Model\SentEmailUrlClicked::create([
+        $old_url = SentEmailUrlClicked::create([
             'sent_email_id' => $old_email->id,
             'hash' => Str::random(32),
         ]);
@@ -835,14 +836,14 @@ class MailTrackerTest extends SetUpTest
     public function it_can_retrieve_url_clicks_from_eloquent()
     {
         Event::fake();
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $track = SentEmail::create([
             'hash' => Str::random(32),
         ]);
         $message_id = Str::random(32);
         $track->message_id = $message_id;
         $track->save();
 
-        $urlClick = \jdavidbakr\MailTracker\Model\SentEmailUrlClicked::create([
+        $urlClick = SentEmailUrlClicked::create([
             'sent_email_id' => $track->id,
             'url' => 'https://example.com',
             'hash' => Str::random(32)
@@ -850,6 +851,22 @@ class MailTrackerTest extends SetUpTest
         $urlClick->save();
         $this->assertTrue($track->urlClicks->count() === 1);
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $track->urlClicks);
-        $this->assertInstanceOf(\jdavidbakr\MailTracker\Model\SentEmailUrlClicked::class, $track->urlClicks->first());
+        $this->assertInstanceOf(SentEmailUrlClicked::class, $track->urlClicks->first());
+    }
+
+    /**
+     * @test
+     */
+    public function it_handles_headers_with_colons()
+    {
+        $headerData = '{"some_id":2,"some_othger_id":"0dd75231-31bb-4e67-8ab7-a83315f75a44","some_field":"A Field Value"}';
+        $track = SentEmail::create([
+            'hash' => Str::random(32),
+            'headers' => 'X-MyHeader: '.$headerData,
+        ]);
+
+        $retrieval = $track->getHeader('X-MyHeader');
+
+        $this->assertEquals($headerData, $retrieval);
     }
 }

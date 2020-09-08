@@ -99,8 +99,11 @@ class SentEmail extends Model
     public function getHeader($key)
     {
         $headers = collect(preg_split("/\r\n|\n|\r/", $this->headers))
+            ->filter(function ($header) {
+                return preg_match("/:/", $header);
+            })
             ->transform(function ($header) {
-                list($key, $value) = explode(":", $header.":");
+                list($key, $value) = explode(":", $header, 2);
                 return collect([
                     'key' => trim($key),
                     'value' => trim($value)
