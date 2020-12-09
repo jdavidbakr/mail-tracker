@@ -78,4 +78,8 @@ return [
      */
     'tracker-queue' => null,
 
+    /**
+     * Size limit for content length stored in database
+     */
+    'content-max-size' => 65535,
 ];

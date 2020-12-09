@@ -69,6 +69,7 @@ Once installed, all outgoing mail will be logged to the database. The following 
 -   **admin-route**: The route information for the admin. Set the prefix and middleware.
 -   **admin-template**: The params for the Admin Panel and Views. You can integrate your existing Admin Panel with the MailTracker admin panel.
 -   **date-format**: You can define the format to show dates in the Admin Panel.
+-   **content-max-size**: You can overwrite default maximum length limit for `content` database field. Do not forget update it's type from `text` if make it longer.
 
 If you do not wish to have an email tracked, then you can add the `X-No-Track` header to your message. Put any random string into this header to prevent the tracking from occurring. The header will be removed from the email prior to being sent.
 

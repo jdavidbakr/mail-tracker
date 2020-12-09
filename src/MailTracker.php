@@ -166,7 +166,7 @@ class MailTracker implements \Swift_Events_SendListener
                     'sender' => $from_name." <".$from_email.">",
                     'recipient' => $to_name.' <'.$to_email.'>',
                     'subject' => $subject,
-                    'content' => config('mail-tracker.log-content', true) ? (strlen($original_content) > 65535 ? substr($original_content, 0, 65532) . "..." : $original_content) : null,
+                    'content' => config('mail-tracker.log-content', true) ? (strlen($original_content) > config('mail-tracker.content-max-size', 65535) ? substr($original_content, 0, config('mail-tracker.content-max-size', 65535)) . '...' : $original_content) : null,
                     'opens' => 0,
                     'clicks' => 0,
                     'message_id' => $message->getId(),
