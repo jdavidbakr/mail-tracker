@@ -23,7 +23,6 @@ before_install:
     - echo "memory_limit=-1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
     - cp ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini ~/xdebug.ini
     - phpenv config-rm xdebug.ini
-    - composer global require hirak/prestissimo --update-no-dev
     - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update --prefer-dist
     - composer require "orchestra/testbench:${TESTBENCH}" --no-update --prefer-dist
 
