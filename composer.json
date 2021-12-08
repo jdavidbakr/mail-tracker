@@ -23,9 +23,10 @@
         "aws/aws-sdk-php": "^3.133"
     },
     "require-dev": {
-        "phpunit/phpunit": "~8.0",
+        "phpunit/phpunit": "^9.0",
         "orchestra/testbench": "~5.0|~6.0",
-        "mockery/mockery": "^1.1"
+        "mockery/mockery": "^1.1",
+        "nunomaduro/collision": "^5.10"
     },
     "suggest": {
         "fedeisas/laravel-mail-css-inliner": "Automatically inlines CSS into all outgoing mail."
@@ -41,7 +42,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "./vendor/bin/testbench package:test"
     },
     "extra": {
         "laravel": {
