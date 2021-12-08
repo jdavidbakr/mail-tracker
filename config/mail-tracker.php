@@ -79,6 +79,18 @@ return [
     'log-content' => true,
 
     /**
+     * Determines whether or not the body should be stored in a file instead of database
+     * Can be wither 'database' or 'filesystem'
+     */
+    'log-content-strategy' => 'database',
+
+    /**
+     * What filesystem we use for storing content html files
+     */
+    'tracker-filesystem' => null,
+    'tracker-filesystem-folder' => 'mail-tracker',
+
+    /**
      * What queue should we dispatch our tracking jobs to?  Null will use the default queue.
      */
     'tracker-queue' => null,

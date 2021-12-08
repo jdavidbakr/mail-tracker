@@ -61,7 +61,10 @@ class MailTrackerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // merge config for consistency
+        if (!$this->isLumen()) {
+            $this->mergeConfigFrom(__DIR__.'/../config/mail-tracker.php', 'mail-tracker');
+        }
     }
 
     /**

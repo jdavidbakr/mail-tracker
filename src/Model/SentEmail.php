@@ -2,7 +2,10 @@
 
 namespace jdavidbakr\MailTracker\Model;
 
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -15,7 +18,7 @@ use Illuminate\Support\Str;
  * @property int $opens
  * @property int $clicks
  * @property int|null $message_id
- * @property string $meta
+ * @property Collection $meta
  */
 class SentEmail extends Model
 {
@@ -108,6 +111,25 @@ class SentEmail extends Model
             }
         }
         return implode(" | ", $responses);
+    }
+
+    /**
+     * Get content according to log-content-strategy.
+     * @return string|null
+     */
+    public function getContentAttribute(): ?string
+    {
+        if ($content = $this->attributes['content']) {
+            return $content;
+        }
+        if ($contentFilePath = $this->meta->get('content_file_path')) {
+            try {
+                return Storage::disk(config('mail-tracker.tracker-filesystem-folder'))->get($contentFilePath);
+            } catch (FileNotFoundException $e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     /**
