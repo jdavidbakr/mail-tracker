@@ -2,7 +2,6 @@
 
 namespace jdavidbakr\MailTracker\Tests;
 
-use Aws\Sns\MessageValidator as SNSMessageValidator;
 use Exception;
 use Faker\Factory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -18,13 +17,11 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
-use jdavidbakr\MailTracker\Events\ComplaintMessageEvent;
-use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
 use jdavidbakr\MailTracker\Events\EmailSentEvent;
 use jdavidbakr\MailTracker\Events\LinkClickedEvent;
-use jdavidbakr\MailTracker\Events\ViewEmailEvent;
 use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use jdavidbakr\MailTracker\MailTracker;
 use jdavidbakr\MailTracker\Model\SentEmail;
@@ -1213,5 +1210,52 @@ class MailTrackerTest extends SetUpTest
         $retrieval = $track->getHeader('X-MyHeader');
 
         $this->assertEquals($headerData, $retrieval);
+    }
+
+    public function testLogContentInFilesystem()
+    {
+        $faker = Factory::create();
+        $email = $faker->email;
+        $name = $faker->firstName . ' ' .$faker->lastName;
+        $content = 'Text to e-mail';
+        View::addLocation(__DIR__);
+        $str = Mockery::mock(Str::class);
+        app()->instance(Str::class, $str);
+        $str->shouldReceive('random')
+            ->once()
+            ->andReturn('random-hash');
+        Storage::fake(config('mail-tracker.tracker-filesystem'));
+        config()->set('mail-tracker.log-content-strategy', 'filesystem');
+
+        config()->set('filesystems.disks.testing.driver', 'local');
+        config()->set('filesystems.disks.testing.root', realpath(__DIR__.'/../storage'));
+        config()->set('filesystems.default', 'testing');
+
+        try {
+            Mail::raw($content, function ($message) use ($email, $name) {
+                $message->from('from@johndoe.com', 'From Name');
+
+                $message->to($email, $name);
+            });
+        } catch (Exception $e) {
+        }
+
+        $this->assertDatabaseHas('sent_emails', [
+            'hash' => 'random-hash',
+            'sender_name' => 'From Name',
+            'sender_email' => 'from@johndoe.com',
+            'recipient_name' => $name,
+            'recipient_email' => $email,
+            'content' => null
+        ]);
+
+        $tracker = SentEmail::query()->where('hash', '=','random-hash')->first();
+        $this->assertNotNull($tracker);
+        $this->assertEquals($content, $tracker->content);
+        $folder = config('mail-tracker.tracker-filesystem-folder', 'mail-tracker');
+        $filePath = $tracker->meta->get('content_file_path');
+        $expectedPath = "{$folder}/random-hash.html";
+        $this->assertEquals($expectedPath, $filePath);
+        Storage::disk(config('mail-tracker.tracker-filesystem'))->assertExists($filePath);
     }
 }
