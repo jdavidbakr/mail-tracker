@@ -46,6 +46,16 @@ class SentEmail extends Model
         'clicked_at' => 'datetime',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::deleting(function ($email) {
+            if ($email->meta && ($filePath = $email->meta->get('content_file_path'))) {
+                Storage::disk(config('mail-tracker.tracker-filesystem'))->delete($filePath);
+            }
+        });
+    }
+
     public function getConnectionName()
     {
         $connName = config('mail-tracker.connection');
