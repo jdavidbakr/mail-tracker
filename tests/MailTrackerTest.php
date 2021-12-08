@@ -634,6 +634,11 @@ class MailTrackerTest extends SetUpTest
      */
     public function it_retrieves_the_mesage_id_from_ses_mail_driver()
     {
+        $str = Mockery::mock(Str::class);
+        app()->instance(Str::class, $str);
+        $str->shouldReceive('random')
+            ->with(32)
+            ->andReturn('random-hash');
         Config::set('mail.driver', 'ses');
         Config::set('mail.default', null);
         $sent = SentEmail::create([
@@ -1055,7 +1060,7 @@ class MailTrackerTest extends SetUpTest
         $track = SentEmail::orderBy('id', 'desc')->first();
         $this->assertEquals($header_test, $track->getHeader('X-Header-Test'));
     }
-    
+
     /**
      * @test
      */
