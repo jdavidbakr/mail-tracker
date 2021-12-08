@@ -1,5 +1,7 @@
 <?php
 
+use jdavidbakr\MailTracker\Model\SentEmail;
+
 return [
     /**
      * To disable the pixel injection, set this to false.
@@ -94,6 +96,11 @@ return [
      * What queue should we dispatch our tracking jobs to?  Null will use the default queue.
      */
     'tracker-queue' => null,
+
+    /**
+     * Make model overridable
+     */
+    'sent_email_model' => SentEmail::class,
 
     /**
      * Size limit for content length stored in database

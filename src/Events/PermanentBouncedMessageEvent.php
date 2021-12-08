@@ -16,9 +16,8 @@ class PermanentBouncedMessageEvent implements ShouldQueue
     /**
      * Create a new event instance.
      *
-     * @param  email_address  $email_address
-     * @param  sent_email  $sent_email
-     * @return void
+     * @param string $email_address
+     * @param SentEmail|null $sent_email
      */
     public function __construct($email_address, SentEmail $sent_email = null)
     {

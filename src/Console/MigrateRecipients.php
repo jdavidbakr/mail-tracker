@@ -4,7 +4,6 @@ namespace jdavidbakr\MailTracker\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use jdavidbakr\MailTracker\Model\SentEmail;
 
 class MigrateRecipients extends Command
 {
@@ -29,9 +28,10 @@ class MigrateRecipients extends Command
      */
     public function handle()
     {
-        $bar = optional($this->output)->createProgressBar(SentEmail::count());
+        $model = config('mail-tracker.sent_email_model');
+        $bar = optional($this->output)->createProgressBar($model::count());
         optional($bar)->start();
-        DB::connection((new SentEmail)->getConnectionName())->table('sent_emails')->orderBy('id')->chunk(100, function ($emails) use ($bar) {
+        DB::connection((new $model)->getConnectionName())->table('sent_emails')->orderBy('id')->chunk(100, function ($emails) use ($bar) {
             $emails->each(function ($email) use ($bar) {
                 if ($email->recipient_email == null) {
                     $this->migrateEmail($email);
@@ -44,6 +44,7 @@ class MigrateRecipients extends Command
 
     protected function migrateEmail($email)
     {
+        $model = config('mail-tracker.sent_email_model');
         $sender_info = preg_match("/^([^<]*) <(.*)>$/", $email->sender, $matches);
         if ($sender_info) {
             $sender_name = $matches[1];
@@ -54,7 +55,7 @@ class MigrateRecipients extends Command
             $recipient_name = $matches[1];
             $recipient_email = $matches[2];
         }
-        SentEmail::where('id', $email->id)
+        $model::where('id', $email->id)
             ->update([
                 'sender_name' => trim($sender_name),
                 'sender_email' => trim($sender_email),

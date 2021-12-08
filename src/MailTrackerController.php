@@ -4,14 +4,9 @@ namespace jdavidbakr\MailTracker;
 
 use App\Http\Requests;
 use Event;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider;
-
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use jdavidbakr\MailTracker\Events\LinkClickedEvent;
 use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
-use jdavidbakr\MailTracker\RecordLinkClickJob;
-use jdavidbakr\MailTracker\RecordTrackingJob;
 use Response;
 
 class MailTrackerController extends Controller
@@ -28,7 +23,8 @@ class MailTrackerController extends Controller
         $response->header('Last-Modified', 'Wed, 11 Jan 2006 12:59:00 GMT');
         $response->header('Pragma', 'no-cache');
 
-        $tracker = Model\SentEmail::where('hash', $hash)
+        $model = config('mail-tracker.sent_email_model');
+        $tracker = $model::where('hash', $hash)
             ->first();
         if ($tracker) {
             RecordTrackingJob::dispatch($tracker, request()->ip())
@@ -63,7 +59,8 @@ class MailTrackerController extends Controller
         if (!$url) {
             $url = config('mail-tracker.redirect-missing-links-to') ?: '/';
         }
-        $tracker = Model\SentEmail::where('hash', $hash)
+        $model = config('mail-tracker.sent_email_model');
+        $tracker = $model::where('hash', $hash)
             ->first();
         if ($tracker) {
             RecordLinkClickJob::dispatch($tracker, $url, request()->ip())

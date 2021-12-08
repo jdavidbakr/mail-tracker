@@ -10,7 +10,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Event;
 use jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent;
 use jdavidbakr\MailTracker\Events\TransientBouncedMessageEvent;
-use jdavidbakr\MailTracker\Model\SentEmail;
 
 class RecordBounceJob implements ShouldQueue
 {
@@ -33,7 +32,8 @@ class RecordBounceJob implements ShouldQueue
 
     public function handle()
     {
-        $sent_email = SentEmail::where('message_id', $this->message->mail->messageId)->first();
+        $model = config('mail-tracker.sent_email_model');
+        $sent_email = $model::where('message_id', $this->message->mail->messageId)->first();
         if ($sent_email) {
             $meta = collect($sent_email->meta);
             $current_codes = [];

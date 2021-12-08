@@ -8,7 +8,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
 
 class RecordDeliveryJob implements ShouldQueue
@@ -32,7 +31,8 @@ class RecordDeliveryJob implements ShouldQueue
 
     public function handle()
     {
-        $sent_email = SentEmail::where('message_id', $this->message->mail->messageId)->first();
+        $model = config('mail-tracker.sent_email_model');
+        $sent_email = $model::where('message_id', $this->message->mail->messageId)->first();
         if ($sent_email) {
             $meta = collect($sent_email->meta);
             $meta->put('smtpResponse', $this->message->delivery->smtpResponse);

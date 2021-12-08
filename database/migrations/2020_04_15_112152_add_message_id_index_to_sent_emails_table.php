@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-use jdavidbakr\MailTracker\Model\SentEmail;
 use Illuminate\Database\Migrations\Migration;
 
 class AddMessageIdIndexToSentEmailsTable extends Migration
@@ -14,7 +13,8 @@ class AddMessageIdIndexToSentEmailsTable extends Migration
      */
     public function up()
     {
-        Schema::connection((new SentEmail())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
+        $model = config('mail-tracker.sent_email_model');
+        Schema::connection((new $model())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
             $table->index('message_id');
         });
     }
@@ -26,7 +26,8 @@ class AddMessageIdIndexToSentEmailsTable extends Migration
      */
     public function down()
     {
-        Schema::connection((new SentEmail())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
+        $model = config('mail-tracker.sent_email_model');
+        Schema::connection((new $model())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
             $table->dropIndex('sent_emails_message_id_index');
         });
     }

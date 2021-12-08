@@ -8,7 +8,6 @@ use Response;
 use App\Http\Requests;
 use Illuminate\Routing\Controller;
 
-use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
 
 use Mail;
@@ -43,7 +42,8 @@ class AdminController extends Controller
         session(['mail-tracker-index-page' => request()->page]);
         $search = session('mail-tracker-index-search');
 
-        $query = SentEmail::query();
+        $model = config('mail-tracker.sent_email_model');
+        $query = $model::query();
 
         if ($search) {
             $terms = explode(" ", $search);
@@ -71,7 +71,8 @@ class AdminController extends Controller
      */
     public function getShowEmail($id)
     {
-        $email = SentEmail::where('id', $id)->first();
+        $model = config('mail-tracker.sent_email_model');
+        $email = $model::where('id', $id)->first();
         return \View('emailTrakingViews::show')->with('email', $email);
     }
 
@@ -96,7 +97,8 @@ class AdminController extends Controller
      */
     public function getSMTPDetail($id)
     {
-        $detalle = SentEmail::find($id);
+        $model = config('mail-tracker.sent_email_model');
+        $detalle = $model::find($id);
         if (!$detalle) {
             return back();
         }

@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Events\EmailSentEvent;
 use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
 
@@ -39,10 +38,11 @@ class MailTracker implements \Swift_Events_SendListener
 
     protected function updateSesMessageId($message)
     {
+        $model = config('mail-tracker.sent_email_model');
         // Get the SentEmail object
         $headers = $message->getHeaders();
         $hash = optional($headers->get('X-Mailer-Hash'))->getFieldBody();
-        $sent_email = SentEmail::where('hash', $hash)->first();
+        $sent_email = $model::where('hash', $hash)->first();
 
         // Get info about the message-id from SES
         if ($sent_email) {
@@ -131,6 +131,7 @@ class MailTracker implements \Swift_Events_SendListener
      */
     protected function createTrackers($message)
     {
+        $model = config('mail-tracker.sent_email_model');
         foreach ($message->getTo() as $to_email => $to_name) {
             foreach ($message->getFrom() as $from_email => $from_name) {
                 $headers = $message->getHeaders();
@@ -142,7 +143,7 @@ class MailTracker implements \Swift_Events_SendListener
                 }
                 do {
                     $hash = app(Str::class)->random(32);
-                    $used = SentEmail::where('hash', $hash)->count();
+                    $used = $model::where('hash', $hash)->count();
                 } while ($used > 0);
                 $headers->addTextHeader('X-Mailer-Hash', $hash);
                 $subject = $message->getSubject();
@@ -180,8 +181,7 @@ class MailTracker implements \Swift_Events_SendListener
                     $dbLoggedContent = strlen($original_content) > config('mail-tracker.content-max-size', 65535) ? substr($original_content, 0, config('mail-tracker.content-max-size', 65535)) . '...' : $original_content;
                 }
 
-                /** @var SentEmail $tracker */
-                $tracker = SentEmail::create([
+                $tracker = $model::create([
                     'hash' => $hash,
                     'headers' => $headers->toString(),
                     'sender_name' => $from_name,
@@ -208,13 +208,14 @@ class MailTracker implements \Swift_Events_SendListener
      */
     protected function purgeOldRecords()
     {
+        $model = config('mail-tracker.sent_email_model');
         if (config('mail-tracker.expire-days') > 0) {
-            $emails = SentEmail::where('created_at', '<', \Carbon\Carbon::now()
+            $emails = $model::where('created_at', '<', \Carbon\Carbon::now()
                 ->subDays(config('mail-tracker.expire-days')))
                 ->select('id')
                 ->get();
             SentEmailUrlClicked::whereIn('sent_email_id', $emails->pluck('id'))->delete();
-            SentEmail::whereIn('id', $emails->pluck('id'))->delete();
+            $model::whereIn('id', $emails->pluck('id'))->delete();
         }
     }
 }

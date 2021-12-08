@@ -25,6 +25,7 @@ class SentEmailUrlClicked extends Model
 
     public function email()
     {
-        return $this->belongsTo(SentEmail::class, 'sent_email_id');
+        $model = config('mail-tracker.sent_email_model');
+        return $this->belongsTo($model, 'sent_email_id');
     }
 }
