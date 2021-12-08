@@ -67,7 +67,6 @@ class MailTrackerTest extends SetUpTest
         $str = Mockery::mock(Str::class);
         app()->instance(Str::class, $str);
         $str->shouldReceive('random')
-            ->once()
             ->andReturn('random-hash');
 
         Event::fake();
@@ -452,7 +451,6 @@ class MailTrackerTest extends SetUpTest
         app()->instance(Str::class, $str);
         $str->shouldReceive('random')
             ->with(32)
-            ->once()
             ->andReturn('random-hash');
         Config::set('mail.driver', 'ses');
         Config::set('mail.default', null);
