@@ -389,6 +389,12 @@ class MailTrackerTest extends SetUpTest
             ->with('X-No-Track')
             ->once()
             ->andReturn(null);
+        $headers->shouldReceive('get')
+            ->with('X-Mailable-Id')
+            ->andReturn(null);
+        $headers->shouldReceive('get')
+            ->with('X-Mailable-Type')
+            ->andReturn(null);
         $this->mailer_hash = '';
         $headers->shouldReceive('addTextHeader')
             ->once()
@@ -458,6 +464,12 @@ class MailTrackerTest extends SetUpTest
         $headers->shouldReceive('get')
             ->with('X-No-Track')
             ->once()
+            ->andReturn(null);
+        $headers->shouldReceive('get')
+            ->with('X-Mailable-Id')
+            ->andReturn(null);
+        $headers->shouldReceive('get')
+            ->with('X-Mailable-Type')
             ->andReturn(null);
         $headers->shouldReceive('addTextHeader')
             ->once()
@@ -990,5 +1002,47 @@ class MailTrackerTest extends SetUpTest
         $expectedPath = "{$folder}/random-hash.html";
         $this->assertEquals($expectedPath, $filePath);
         Storage::disk(config('mail-tracker.tracker-filesystem'))->assertExists($filePath);
+    }
+
+    public function testMailableRelation()
+    {
+        Event::fake();
+
+        $faker = Factory::create();
+        $email = $faker->email;
+        $subject = $faker->sentence;
+        $name = $faker->firstName . ' ' .$faker->lastName;
+        \View::addLocation(__DIR__);
+        try {
+            \Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
+                $message->from('from@johndoe.com', 'From Name');
+                $message->sender('sender@johndoe.com', 'Sender Name');
+
+                $message->to($email, $name);
+
+                $message->cc('cc@johndoe.com', 'CC Name');
+                $message->bcc('bcc@johndoe.com', 'BCC Name');
+
+                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+
+                $message->subject($subject);
+
+                $message->priority(3);
+
+                $message->getHeaders()->addTextHeader('X-Mailable-Id', 123);
+                $message->getHeaders()->addTextHeader('X-Mailable-Type', 'orders');
+            });
+        } catch (Swift_TransportException $e) {
+        }
+
+        $this->assertDatabaseHas('sent_emails', [
+            'subject' => $subject,
+            'sender_name' => 'From Name',
+            'sender_email' => 'from@johndoe.com',
+            'recipient_name' => $name,
+            'recipient_email' => $email,
+            'mailable_id' => '123',
+            'mailable_type' => 'orders',
+        ]);
     }
 }

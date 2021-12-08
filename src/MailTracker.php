@@ -126,7 +126,7 @@ class MailTracker implements \Swift_Events_SendListener
     /**
      * Create the trackers
      *
-     * @param  Swift_Mime_Message $message
+     * @param  \Swift_Mime_SimpleMessage $message
      * @return void
      */
     protected function createTrackers($message)
@@ -181,7 +181,7 @@ class MailTracker implements \Swift_Events_SendListener
                     $dbLoggedContent = strlen($original_content) > config('mail-tracker.content-max-size', 65535) ? substr($original_content, 0, config('mail-tracker.content-max-size', 65535)) . '...' : $original_content;
                 }
 
-                $tracker = $model::create([
+                $tracker = new $model([
                     'hash' => $hash,
                     'headers' => $headers->toString(),
                     'sender_name' => $from_name,
@@ -195,6 +195,16 @@ class MailTracker implements \Swift_Events_SendListener
                     'message_id' => $message->getId(),
                     'meta' => isset($contentFilePath) ? ['content_file_path' => $contentFilePath] : [],
                 ]);
+
+                // extract mailable linking info
+                if ($headers->get('X-Mailable-Id') && $headers->get('X-Mailable-Type')) {
+                    $tracker->mailable_type = $tracker->getHeader('X-Mailable-Type');
+                    $tracker->mailable_id = $tracker->getHeader('X-Mailable-Id');
+                    $headers->remove('X-Mailable-Type');
+                    $headers->remove('X-Mailable-Id');
+                    $tracker->headers = $headers->toString();
+                }
+                $tracker->save();
 
                 Event::dispatch(new EmailSentEvent($tracker));
             }
