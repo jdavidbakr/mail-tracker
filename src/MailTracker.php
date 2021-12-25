@@ -193,7 +193,7 @@ class MailTracker implements \Swift_Events_SendListener
                     'opens' => 0,
                     'clicks' => 0,
                     'message_id' => $message->getId(),
-                    'meta' => isset($contentFilePath) ? ['content_file_path' => $contentFilePath] : [],
+                    'meta' => $this->buildInitialMeta($contentFilePath ?? null),
                 ]);
 
                 // extract mailable linking info
@@ -233,5 +233,21 @@ class MailTracker implements \Swift_Events_SendListener
             SentEmailUrlClicked::whereIn('sent_email_id', $emails->pluck('id'))->delete();
             $model::whereIn('id', $emails->pluck('id'))->delete();
         }
+    }
+
+    /**
+     * @param $contentFilePath
+     * @return array
+     */
+    protected function buildInitialMeta($contentFilePath = null){
+        $meta = [];
+        if($contentFilePath !== null){
+            $meta['content_file_path'] =  $contentFilePath;
+        }
+
+        if(config('mail-tracker.log-mail-driver')){
+            $meta['mail_driver'] = config('mail.driver');
+        }
+        return $meta;
     }
 }

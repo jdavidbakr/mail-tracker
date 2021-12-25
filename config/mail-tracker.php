@@ -93,6 +93,11 @@ return [
     'tracker-filesystem-folder' => 'mail-tracker',
 
     /**
+     *  Determines whether or not the used mail driver should be logged
+     */
+    'log-mail-driver' => false,
+
+    /**
      * What queue should we dispatch our tracking jobs to?  Null will use the default queue.
      */
     'tracker-queue' => null,
