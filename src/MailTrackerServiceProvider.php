@@ -119,6 +119,7 @@ class MailTrackerServiceProvider extends ServiceProvider
                 Route::get('l/{url}/{hash}', 'MailTrackerController@getL')->name('mailTracker_l');
                 Route::get('n', 'MailTrackerController@getN')->name('mailTracker_n');
                 Route::post('sns', 'SNSController@callback')->name('mailTracker_SNS');
+                Route::post('mailgun', 'MailgunController@callback')->name('mailTracker_Mailgun');
             });
         } else {
             $app = $this->app;
@@ -126,6 +127,7 @@ class MailTrackerServiceProvider extends ServiceProvider
                 $app->get('t', 'MailTrackerController@getT')->name('mailTracker_t');
                 $app->get('l', 'MailTrackerController@getL')->name('mailTracker_l');
                 $app->post('sns', 'SNSController@callback')->name('mailTracker_SNS');
+                $app->post('mailgun', 'MailgunController@callback')->name('mailTracker_Mailgun');
             });
         }
         // Install the Admin routes
