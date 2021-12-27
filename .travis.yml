@@ -12,7 +12,7 @@ php:
     - 8.0
 
 env:
-    - LARAVEL_VERSION=7.x-dev TESTBENCH=5.x-dev
+    - LARAVEL_VERSION=7.x-dev TESTBENCH=6.x-dev
     - LARAVEL_VERSION=8.x-dev TESTBENCH=6.x-dev
 
 jobs:

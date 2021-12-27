@@ -20,9 +20,9 @@ use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use jdavidbakr\MailTracker\MailTracker;
 use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
-use jdavidbakr\MailTracker\RecordBounceJob;
-use jdavidbakr\MailTracker\RecordComplaintJob;
-use jdavidbakr\MailTracker\RecordDeliveryJob;
+use jdavidbakr\MailTracker\Jobs\SnsRecordBounceJob;
+use jdavidbakr\MailTracker\Jobs\SnsRecordComplaintJob;
+use jdavidbakr\MailTracker\Jobs\SnsRecordDeliveryJob;
 use jdavidbakr\MailTracker\RecordLinkClickJob;
 use jdavidbakr\MailTracker\RecordTrackingJob;
 use Mockery;
@@ -417,6 +417,10 @@ class MailTrackerTest extends SetUpTest
             ->andReturn(Mockery::mock([
                 'getFieldBody' => 'aws-mailer-hash'
             ]));
+        $headers->shouldReceive('get')
+            ->with('X-Mailgun-Message-ID')
+            ->once()
+            ->andReturn(null);
         $headers->shouldReceive('toString')
             ->once();
         $event = Mockery::mock(\Swift_Events_SendEvent::class, [
@@ -490,6 +494,10 @@ class MailTrackerTest extends SetUpTest
             ->andReturn(Mockery::mock([
                 'getFieldBody' => 'aws-mailer-hash'
             ]));
+        $headers->shouldReceive('get')
+            ->with('X-Mailgun-Message-ID')
+            ->once()
+            ->andReturn(null);
         $headers->shouldReceive('toString')
             ->once();
         $event = Mockery::mock(\Swift_Events_SendEvent::class, [
@@ -626,7 +634,7 @@ class MailTrackerTest extends SetUpTest
             ]);
 
         $response->assertSee('notification processed');
-        Bus::assertDispatched(RecordDeliveryJob::class, function ($job) use ($message) {
+        Bus::assertDispatched(SnsRecordDeliveryJob::class, function ($job) use ($message) {
             return $job->message == (object)$message &&
                 $job->queue == 'alt-queue';
         });
@@ -657,7 +665,7 @@ class MailTrackerTest extends SetUpTest
             ]);
 
         $response->assertSee('notification processed');
-        Bus::assertDispatched(RecordBounceJob::class, function ($job) use ($message) {
+        Bus::assertDispatched(SnsRecordBounceJob::class, function ($job) use ($message) {
             return $job->message == (object)$message &&
                 $job->queue == 'alt-queue';
         });
@@ -688,7 +696,7 @@ class MailTrackerTest extends SetUpTest
             ]);
 
         $response->assertSee('notification processed');
-        Bus::assertDispatched(RecordComplaintJob::class, function ($job) use ($message) {
+        Bus::assertDispatched(SnsRecordComplaintJob::class, function ($job) use ($message) {
             return $job->message == (object)$message &&
                 $job->queue == 'alt-queue';
         });

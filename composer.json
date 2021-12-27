@@ -16,7 +16,7 @@
         "role": "Developer"
     }],
     "require": {
-        "php": ">=7.2.0",
+        "php": ">=7.4",
         "illuminate/support": "~7.0|~8.0",
         "guzzlehttp/guzzle": "^5.3.1|^6.2.1|^7.0",
         "aws/aws-php-sns-message-validator": "^1.1",

@@ -2,20 +2,20 @@
 
 namespace jdavidbakr\MailTracker;
 
-use Event;
-
-use App\Http\Requests;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client as Guzzle;
 use Aws\Sns\Message as SNSMessage;
 use Illuminate\Routing\Controller;
 use Aws\Sns\MessageValidator as SNSMessageValidator;
+use jdavidbakr\MailTracker\Jobs\SnsRecordBounceJob;
+use jdavidbakr\MailTracker\Jobs\SnsRecordComplaintJob;
+use jdavidbakr\MailTracker\Jobs\SnsRecordDeliveryJob;
 
 class SNSController extends Controller
 {
     public function callback(Request $request)
     {
-        if (config('app.env') != 'production' && $request->message) {
+        if (config('app.env') !== 'production' && $request->message) {
             // phpunit cannot mock static methods so without making a facade
             // for SNSMessage we have to pass the json data in $request->message
             $message = new SNSMessage(json_decode($request->message, true));
@@ -63,19 +63,19 @@ class SNSController extends Controller
 
     protected function process_delivery($message)
     {
-        RecordDeliveryJob::dispatch($message)
+        SnsRecordDeliveryJob::dispatch($message)
             ->onQueue(config('mail-tracker.tracker-queue'));
     }
 
     public function process_bounce($message)
     {
-        RecordBounceJob::dispatch($message)
+        SnsRecordBounceJob::dispatch($message)
             ->onQueue(config('mail-tracker.tracker-queue'));
     }
 
     public function process_complaint($message)
     {
-        RecordComplaintJob::dispatch($message)
+        SnsRecordComplaintJob::dispatch($message)
             ->onQueue(config('mail-tracker.tracker-queue'));
     }
 }

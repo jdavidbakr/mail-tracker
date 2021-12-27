@@ -4,19 +4,17 @@ namespace jdavidbakr\MailTracker\Tests;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Event;
+use jdavidbakr\MailTracker\Jobs\MailgunRecordDeliveryJob;
 use jdavidbakr\MailTracker\Model\SentEmail;
-use jdavidbakr\MailTracker\RecordBounceJob;
-use jdavidbakr\MailTracker\RecordDeliveryJob;
-use jdavidbakr\MailTracker\RecordComplaintJob;
+use jdavidbakr\MailTracker\Jobs\SnsRecordDeliveryJob;
 use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
-use jdavidbakr\MailTracker\Events\ComplaintMessageEvent;
 
 class RecordDeliveryJobTest extends SetUpTest
 {
     /**
      * @test
      */
-    public function it_marks_the_email_as_unsuccessful()
+    public function sns_it_marks_the_email_as_successful()
     {
         Event::fake();
         $track = SentEmail::create([
@@ -37,7 +35,7 @@ class RecordDeliveryJobTest extends SetUpTest
                 'smtpResponse' => 'the smtp response',
             ]
         ];
-        $job = new RecordDeliveryJob($message);
+        $job = new SnsRecordDeliveryJob($message);
 
         $job->handle();
 
@@ -56,7 +54,7 @@ class RecordDeliveryJobTest extends SetUpTest
     /**
      * @test
      */
-    public function it_handles_this_situation()
+    public function sns_it_handles_this_situation()
     {
         $message = (object)[
             'notificationType' => 'Delivery',
@@ -141,10 +139,92 @@ class RecordDeliveryJobTest extends SetUpTest
             ]
         ];
         Event::fake();
-        $job = new RecordDeliveryJob($message);
+        $job = new SnsRecordDeliveryJob($message);
 
         $job->handle();
 
         Event::assertNotDispatched(EmailDeliveredEvent::class);
+    }
+
+    /**
+     * @test
+     */
+    public function mailgun_it_marks_the_email_as_unsuccessful()
+    {
+        Event::fake();
+        $track = SentEmail::create([
+            'hash' => Str::random(32),
+        ]);
+        $message_id = Str::uuid();
+        $track->message_id = $message_id;
+        $track->save();
+        $message = [
+            'event' => 'delivered',
+            'id' => 'hK7mQVt1QtqRiOfQXta4sw',
+            'timestamp' => 12345,
+            'log-level' => 'info',
+            'envelope' =>
+                [
+                    'transport' => 'smtp',
+                    'sender' => 'sender@example.org',
+                    'sending-ip' => '123.123.123.123',
+                    'targets' => 'recipient@example.com',
+                ],
+            'flags' =>
+                [
+                    'is-routed' => false,
+                    'is-authenticated' => false,
+                    'is-system-test' => false,
+                    'is-test-mode' => false,
+                ],
+            'delivery-status' =>
+                [
+                    'tls' => true,
+                    'mx-host' => 'aspmx.l.example.com',
+                    'code' => 250,
+                    'description' => '',
+                    'session-seconds' => 0.4367079734802246,
+                    'utf8' => true,
+                    'attempt-no' => 1,
+                    'message' => 'OK',
+                    'certificate-verified' => true,
+                ],
+            'message' =>
+                [
+                    'headers' =>
+                        [
+                            'to' => 'team@example.org',
+                            'message-id' => $message_id,
+                            'from' => 'sender@exmple.org',
+                            'subject' => 'Test Subject',
+                        ],
+                    'attachments' => [],
+                    'size' => 586,
+                ],
+            'storage' =>
+                [
+                    'url' => 'https://se.api.mailgun.net/v3/domains/example.org/messages/eyJwI...',
+                    'key' => 'eyJwI...',
+                ],
+            'recipient' => 'recipient@example.com',
+            'recipient-domain' => 'example.com',
+            'campaigns' => [],
+            'tags' => [],
+            'user-variables' => [],
+        ];
+        $job = new MailgunRecordDeliveryJob($message);
+
+        $job->handle();
+
+        $track = $track->fresh();
+        $meta = $track->meta;
+        $this->assertEquals('250 - OK ', $meta->get('smtpResponse'));
+        $this->assertTrue($meta->get('success'));
+        $this->assertEquals(12345, $meta->get('delivered_at'));
+        $this->assertEquals(json_decode(json_encode($message), true), $meta->get('mailgun_message_delivery'));
+        Event::assertDispatched(EmailDeliveredEvent::class, function ($event) use ($track) {
+            return $event->email_address === 'recipient@example.com' &&
+                $event->sent_email->hash === $track->hash;
+        });
     }
 }

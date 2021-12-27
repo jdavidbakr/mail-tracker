@@ -29,14 +29,11 @@ class MailTracker implements \Swift_Events_SendListener
 
     public function sendPerformed(\Swift_Events_SendEvent $event)
     {
-        // If this was sent through SES, retrieve the data
-        if ((config('mail.default') ?? config('mail.driver')) == 'ses') {
-            $message = $event->getMessage();
-            $this->updateSesMessageId($message);
-        }
+        $message = $event->getMessage();
+        $this->updateMessageId($message);
     }
 
-    protected function updateSesMessageId($message)
+    protected function updateMessageId($message)
     {
         $model = config('mail-tracker.sent_email_model');
         // Get the SentEmail object
@@ -46,7 +43,28 @@ class MailTracker implements \Swift_Events_SendListener
 
         // Get info about the message-id from SES
         if ($sent_email) {
-            $sent_email->message_id = $headers->get('X-SES-Message-ID')->getFieldBody();
+            $mailDriver = config('mail.default') ?? config('mail.driver');
+            $messageId = null;
+            if ($sesHeader = $headers->get('X-SES-Message-ID')) {
+                $mailDriver = 'ses';
+                $messageId = $sesHeader->getFieldBody();
+            }
+            if ($mailgunHeader = $headers->get('X-Mailgun-Message-ID')) {
+                $mailDriver = 'mailgun';
+                $messageId = $mailgunHeader->getFieldBody();
+            }
+
+            // track driver
+            if (config('mail-tracker.log-mail-driver')) {
+                $meta = collect($sent_email->meta);
+                $meta->put('mail_driver', $mailDriver);
+                $sent_email->meta = $meta;
+            }
+
+            // update id
+            if ($messageId) {
+                $sent_email->message_id = $messageId;
+            }
             $sent_email->save();
         }
     }
@@ -245,9 +263,6 @@ class MailTracker implements \Swift_Events_SendListener
             $meta['content_file_path'] =  $contentFilePath;
         }
 
-        if(config('mail-tracker.log-mail-driver')){
-            $meta['mail_driver'] = config('mail.driver');
-        }
         return $meta;
     }
 }

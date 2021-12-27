@@ -1,6 +1,6 @@
 <?php
 
-namespace jdavidbakr\MailTracker;
+namespace jdavidbakr\MailTracker\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Event;
@@ -8,9 +8,9 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
+use jdavidbakr\MailTracker\Events\ComplaintMessageEvent;
 
-class RecordDeliveryJob implements ShouldQueue
+class SnsRecordComplaintJob implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -35,15 +35,18 @@ class RecordDeliveryJob implements ShouldQueue
         $sent_email = $model::where('message_id', $this->message->mail->messageId)->first();
         if ($sent_email) {
             $meta = collect($sent_email->meta);
-            $meta->put('smtpResponse', $this->message->delivery->smtpResponse);
-            $meta->put('success', true);
-            $meta->put('delivered_at', $this->message->delivery->timestamp);
-            $meta->put('sns_message_delivery', $this->message); // append the full message received from SNS to the 'meta' field
+            $meta->put('complaint', true);
+            $meta->put('success', false);
+            $meta->put('complaint_time', $this->message->complaint->timestamp);
+            if (!empty($this->message->complaint->complaintFeedbackType)) {
+                $meta->put('complaint_type', $this->message->complaint->complaintFeedbackType);
+            }
+            $meta->put('sns_message_complaint', $this->message); // append the full message received from SNS to the 'meta' field
             $sent_email->meta = $meta;
             $sent_email->save();
 
-            foreach ($this->message->delivery->recipients as $recipient) {
-                Event::dispatch(new EmailDeliveredEvent($recipient, $sent_email));
+            foreach ($this->message->complaint->complainedRecipients as $recipient) {
+                Event::dispatch(new ComplaintMessageEvent($recipient->emailAddress, $sent_email));
             }
         }
     }

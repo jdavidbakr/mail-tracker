@@ -1,6 +1,6 @@
 <?php
 
-namespace jdavidbakr\MailTracker;
+namespace jdavidbakr\MailTracker\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Event;
 use jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent;
 use jdavidbakr\MailTracker\Events\TransientBouncedMessageEvent;
 
-class RecordBounceJob implements ShouldQueue
+class SnsRecordBounceJob implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -49,7 +49,7 @@ class RecordBounceJob implements ShouldQueue
             $sent_email->meta = $meta;
             $sent_email->save();
 
-            if ($this->message->bounce->bounceType == 'Permanent') {
+            if ($this->message->bounce->bounceType === 'Permanent') {
                 $this->permanentBounce($sent_email);
             } else {
                 $this->transientBounce($sent_email);
