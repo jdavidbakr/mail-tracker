@@ -53,6 +53,7 @@ class MailTracker implements \Swift_Events_SendListener
                 $mailDriver = 'mailgun';
                 $messageId = $mailgunHeader->getFieldBody();
             }
+            $messageId = (string) Str::of($messageId)->replace('<', '')->replace('>', '');
 
             // track driver
             if (config('mail-tracker.log-mail-driver')) {
