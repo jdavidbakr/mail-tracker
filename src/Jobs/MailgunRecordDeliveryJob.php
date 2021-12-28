@@ -2,6 +2,7 @@
 
 namespace jdavidbakr\MailTracker\Jobs;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
@@ -50,7 +51,7 @@ class MailgunRecordDeliveryJob implements ShouldQueue
             $meta = collect($sent_email->meta);
             $meta->put('smtpResponse', $smtpResponse);
             $meta->put('success', $success);
-            $meta->put('delivered_at', Arr::get($this->eventData, 'timestamp'));
+            $meta->put('delivered_at', Carbon::createFromTimestamp(Arr::get($this->eventData, 'timestamp'))->toIso8601ZuluString());
             $meta->put('mailgun_message_delivery', $this->eventData); // append the full message received from SNS to the 'meta' field
             $sent_email->meta = $meta;
             $sent_email->save();

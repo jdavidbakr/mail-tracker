@@ -2,6 +2,7 @@
 
 namespace jdavidbakr\MailTracker\Tests;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Event;
 use jdavidbakr\MailTracker\Jobs\MailgunRecordDeliveryJob;
@@ -220,7 +221,7 @@ class RecordDeliveryJobTest extends SetUpTest
         $meta = $track->meta;
         $this->assertEquals('250 - OK ', $meta->get('smtpResponse'));
         $this->assertTrue($meta->get('success'));
-        $this->assertEquals(12345, $meta->get('delivered_at'));
+        $this->assertEquals(Carbon::createFromTimestamp('12345')->toIso8601ZuluString(), $meta->get('delivered_at'));
         $this->assertEquals(json_decode(json_encode($message), true), $meta->get('mailgun_message_delivery'));
         Event::assertDispatched(EmailDeliveredEvent::class, function ($event) use ($track) {
             return $event->email_address === 'recipient@example.com' &&
