@@ -108,8 +108,8 @@ class SentEmail extends Model
             $delivered_at = $meta->get('delivered_at');
             $responses[] = $response.' - Delivered '.$delivered_at;
         }
-        if($meta->has('failures') && $meta->has('delivery-status')){
-            $deliveryStatus = $meta->get('delivery-status');
+        if($meta->has('failures') && !empty($meta->get('mailgun_message_bounce')['delivery-status'])){
+            $deliveryStatus = $meta->get('mailgun_message_bounce')['delivery-status'];
             foreach ($meta->get('failures') as $failure) {
                 if (!empty($deliveryStatus['code'])) {
                     $responses [] = $deliveryStatus['code'] . ' (' . $deliveryStatus['message'] . '): ' . $deliveryStatus['description'] . '(' . $failure['emailAddress'] . ')';
