@@ -112,7 +112,7 @@ class SentEmail extends Model
             $deliveryStatus = $meta->get('mailgun_message_bounce')['delivery-status'];
             foreach ($meta->get('failures') as $failure) {
                 if (!empty($deliveryStatus['code'])) {
-                    $responses [] = $deliveryStatus['code'] . ' (' . $deliveryStatus['message'] . '): ' . $deliveryStatus['description'] . '(' . $failure['emailAddress'] . ')';
+                    $responses [] = $deliveryStatus['code'] . ' (' . $deliveryStatus['message'] . '): ' . $deliveryStatus['description'] . ' (' . $failure['emailAddress'] . ')';
                 } else {
                     $responses[] = 'Generic Failure (' . $failure['emailAddress'] . ')';
                 }
