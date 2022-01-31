@@ -42,7 +42,7 @@ return [
     ],
 
     /**
-     * Admin Tamplate
+     * Admin Template
      * example
      * 'name' => 'layouts.app' for Default emailTraking use 'emailTrakingViews::layouts.app'
      * 'section' => 'content' for Default emailTraking use 'content'
@@ -74,7 +74,7 @@ return [
     'sns-topic' => null,
 
     /**
-     * Determines whether or not the body of the email is logged in the sent_emails table
+     * Determines whether the body of the email is logged in the sent_emails table
      */
     'log-content' => true,
 

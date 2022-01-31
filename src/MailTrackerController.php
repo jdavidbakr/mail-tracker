@@ -18,7 +18,7 @@ class MailTrackerController extends Controller
 {
     public function getT($hash)
     {
-        // Create a 1x1 ttransparent pixel and return it
+        // Create a 1x1 transparent pixel and return it
         $pixel = sprintf('%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c', 71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 255, 0, 192, 192, 192, 0, 0, 0, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59);
         $response = Response::make($pixel, 200);
         $response->header('Content-type', 'image/gif');
@@ -68,6 +68,13 @@ class MailTrackerController extends Controller
         if ($tracker) {
             RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
                 ->onQueue(config('mail-tracker.tracker-queue'));
+
+            // If no opened at but has a clicked event then we can assume that it was in fact opened, the tracking pixel may have been blocked
+            if (config('mail-tracker.inject-pixel') && !$tracker->opened_at) {
+                $tracker->opened_at = now();
+                $tracker->save();
+            }
+
             if (!$tracker->clicked_at) {
                 $tracker->clicked_at = now();
                 $tracker->save();
