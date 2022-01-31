@@ -290,6 +290,7 @@ class MailTrackerTest extends SetUpTest
     public function testLink()
     {
         Carbon::setTestNow(now());
+        Config::set('mail-tracker.inject-pixel', true);
         Config::set('mail-tracker.tracker-queue', 'alt-queue');
         Bus::fake();
         $track = SentEmail::create([
@@ -300,7 +301,7 @@ class MailTrackerTest extends SetUpTest
                 'l' => $redirect,
                 'h' => $track->hash
             ]);
-            
+
         $response = $this->get($url);
 
         $response->assertRedirect($redirect);
@@ -313,6 +314,7 @@ class MailTrackerTest extends SetUpTest
         $this->assertDatabaseHas('sent_emails', [
             'id' => $track->id,
             'clicked_at' => now()->format("Y-m-d H:i:s"),
+            'opened_at' => now()->format("Y-m-d H:i:s"),
         ]);
     }
 
