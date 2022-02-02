@@ -14,7 +14,7 @@ class AddHashIndexToSentEmailsUrlClickedTable extends Migration
      */
     public function up()
     {
-     Schema::connection((new SentEmailUrlClicked())->getConnectionName())->create('sent_emails_url_clicked', function (Blueprint $table) {
+     Schema::connection((new SentEmailUrlClicked())->getConnectionName())->table('sent_emails_url_clicked', function (Blueprint $table) {
            $table->index('hash');
         });
     }
@@ -26,7 +26,7 @@ class AddHashIndexToSentEmailsUrlClickedTable extends Migration
      */
     public function down()
     {
-        Schema::connection((new SentEmailUrlClicked())->getConnectionName())->create('sent_emails_url_clicked', function (Blueprint $table) {
+        Schema::connection((new SentEmailUrlClicked())->getConnectionName())->table('sent_emails_url_clicked', function (Blueprint $table) {
             $table->dropIndex('sent_emails_url_clicked_hash_index');
         });
     }
