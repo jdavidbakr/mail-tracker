@@ -16,6 +16,18 @@ class MailTracker implements \Swift_Events_SendListener
     protected $hash;
 
     /**
+     * Configure this library to not register its migrations.
+     *
+     * @return static
+     */
+    public static function ignoreMigrations()
+    {
+        static::$runsMigrations = false;
+
+        return new static;
+    }
+
+    /**
      * Inject the tracking code into the message
      */
     public function beforeSendPerformed(\Swift_Events_SendEvent $event)
