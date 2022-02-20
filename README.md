@@ -65,6 +65,17 @@ $ php artisan migrate
 Note: If you would like to use a different connection to store your models,
 you should update the mail-tracker.php config entry `connection` before running the migrations.
 
+If you would like to use your own migrations, you can skip this library migrations by calling `MailTracker::ignoreMigrations()`. For example:
+
+```php
+// In AppServiceProvider
+
+public function boot()
+{
+    MailTracker::ignoreMigrations();
+}
+```
+
 ## Usage
 
 Once installed, all outgoing mail will be logged to the database. The following config options are available in config/mail-tracker.php:
