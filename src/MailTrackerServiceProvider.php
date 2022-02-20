@@ -27,9 +27,12 @@ class MailTrackerServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (MailTracker::$runsMigrations && $this->app->runningInConsole()) {
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        }
+
         // Publish pieces
         $this->publishConfig();
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->publishViews();
 
         // Register console commands

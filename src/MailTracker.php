@@ -10,6 +10,9 @@ use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
 
 class MailTracker implements \Swift_Events_SendListener
 {
+    // Set this to "false" to skip this library migrations
+    public static $runsMigrations = true;
+
     protected $hash;
 
     /**
