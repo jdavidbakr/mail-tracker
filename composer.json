@@ -17,14 +17,14 @@
     }],
     "require": {
         "php": ">=7.2.0",
-        "illuminate/support": "~7.0|~8.0",
+        "illuminate/support": "~7.0|~8.0|~9.0",
         "guzzlehttp/guzzle": "^5.3.1|^6.2.1|^7.0",
         "aws/aws-php-sns-message-validator": "^1.1",
         "aws/aws-sdk-php": "^3.133"
     },
     "require-dev": {
         "phpunit/phpunit": "~8.0",
-        "orchestra/testbench": "~5.0|~6.0",
+        "orchestra/testbench": "~5.0|~6.0|~7.0",
         "mockery/mockery": "^1.1"
     },
     "suggest": {
