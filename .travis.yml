@@ -10,10 +10,12 @@ php:
     - 7.3
     - 7.4
     - 8.0
+    - 8.1
 
 env:
     - LARAVEL_VERSION=7.x-dev TESTBENCH=5.x-dev
     - LARAVEL_VERSION=8.x-dev TESTBENCH=6.x-dev
+    - LARAVEL_VERSION=9.x-dev TESTBENCH=7.x-dev
 
 jobs:
     exclude:
