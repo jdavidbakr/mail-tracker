@@ -184,16 +184,16 @@ class MailTracker
                 $subject = $message->getSubject();
 
                 $original_content = $message->getBody();
-                $originalHtml = $original_content->getBody();
+                $original_html = $message->getHtmlbody();
 
                 $mime = $original_content->getMediaType().'/'.$original_content->getMediaSubtype();
 
                 if ($mime === 'text/html' ||
-                    ($mime === 'multipart/alternative' && $original_content->getBody()) ||
-                    ($mime === 'multipart/mixed' && $original_content->getBody())
+                    ($mime === 'multipart/alternative' && $original_content) ||
+                    ($mime === 'multipart/mixed' && $original_content)
                 ) {
                     $message->setBody(new TextPart(
-                            $this->addTrackers($original_content->getBody(), $hash),
+                            $this->addTrackers($original_html, $hash),
                             null,
                             $original_content->getMediaSubtype(),
                             null
@@ -210,9 +210,9 @@ class MailTracker
                     'recipient_email' => $to_email,
                     'subject' => $subject,
                     'content' => config('mail-tracker.log-content', true) ?
-                        (Str::length($originalHtml) > config('mail-tracker.content-max-size', 65535) ?
-                            Str::substr($originalHtml, 0, config('mail-tracker.content-max-size', 65535)) . '...' :
-                            $originalHtml) 
+                        (Str::length($original_html) > config('mail-tracker.content-max-size', 65535) ?
+                            Str::substr($original_html, 0, config('mail-tracker.content-max-size', 65535)) . '...' :
+                            $original_html)
                         : null,
                     'opens' => 0,
                     'clicks' => 0,
