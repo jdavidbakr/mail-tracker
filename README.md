@@ -30,14 +30,16 @@ There was a breaking change with the update to version 3.0, specifically regardi
 First, upgrade to version 2.2 by running:
 
 ```bash
-$ composer require jdavidbakr/mail-tracker ~2.2
+composer require jdavidbakr/mail-tracker ~2.2
 ```
 
 If you are updating from an earlier version, you will need to update the config file and run the new migrations. For best results, make a backup copy of config/mail-tracker.php and the views in resources/views/vendor/emailTrackingViews (if they exists) to restore any values you have customized, then delete that file and run
 
 ```bash
-$ php artisan vendor:publish
-$ php artisan migrate
+php artisan vendor:publish
+```
+```bash
+php artisan migrate
 ```
 
 Also note that the migration for the `sent_emails_url_clicked` table changed with version 2.1.13. The change is that the URL column is now a `TEXT` field to allow for longer URLs. If you have an old system you may want to manually change that column; there is no migration included to perform that update.
@@ -47,19 +49,19 @@ Also note that the migration for the `sent_emails_url_clicked` table changed wit
 Via Composer
 
 ```bash
-$ composer require jdavidbakr/mail-tracker
+composer require jdavidbakr/mail-tracker
 ```
 
 Publish the config file and migration
 
 ```bash
-$ php artisan vendor:publish --provider="jdavidbakr\MailTracker\MailTrackerServiceProvider"
+php artisan vendor:publish --provider="jdavidbakr\MailTracker\MailTrackerServiceProvider"
 ```
 
 Run the migration
 
 ```bash
-$ php artisan migrate
+php artisan migrate
 ```
 
 Note: If you would like to use a different connection to store your models,
