@@ -121,6 +121,7 @@ You may want to do additional processing on these events, so an event is fired i
 -   jdavidbakr\MailTracker\Events\LinkClickedEvent
     - Public attribute `sent_email` contains the `SentEmail` model
     - Public attribute `ip_address` contains the IP address that was used to trigger the event
+    - Public attribute `link_url` contains the clicked URL
 
 If you are using the Amazon SNS notification system, these events are fired so you can do additional processing.
 
