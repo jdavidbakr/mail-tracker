@@ -51,6 +51,10 @@ class RecordLinkClickJob implements ShouldQueue
                 'hash' => $this->sentEmail->hash,
             ]);
         }
-        Event::dispatch(new LinkClickedEvent($this->sentEmail, $this->ipAddress));
+        Event::dispatch(new LinkClickedEvent(
+            $this->sentEmail,
+            $this->ipAddress,
+            $this->url,
+        ));
     }
 }
