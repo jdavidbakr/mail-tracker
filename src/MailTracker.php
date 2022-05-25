@@ -197,6 +197,22 @@ class MailTracker
                     $messageBody = $message->getBody() ?: [];
                     $newParts = [];
                     foreach($messageBody->getParts() as $part) {
+                        if (method_exists($part, 'getParts')) {
+                            foreach ($part->getParts() as $p) {
+                                if($p->getMediaSubtype() == 'html') {
+                                    $original_html = $p->getBody();
+                                    $newParts[] = new TextPart(
+                                        $this->addTrackers($original_html, $hash),
+                                        $message->getHtmlCharset(),
+                                        $p->getMediaSubtype(),
+                                        null
+                                    );
+
+                                    break;
+                                }
+                            }
+                        }
+
                         if($part->getMediaSubtype() == 'html') {
                             $original_html = $part->getBody();
                             $newParts[] = new TextPart(
