@@ -2,7 +2,7 @@
 
 namespace jdavidbakr\MailTracker;
 
-use Exception;
+use Closure;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\SentMessage;
@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 use jdavidbakr\MailTracker\Events\EmailSentEvent;
 use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\Multipart\AlternativePart;
 use Symfony\Component\Mime\Part\Multipart\MixedPart;
 use Symfony\Component\Mime\Part\Multipart\RelatedPart;
@@ -23,6 +22,9 @@ class MailTracker
     public static $runsMigrations = true;
 
     protected $hash;
+
+    // Allow developers to provide their own
+    protected Closure $messageIdResolver;
 
     /**
      * Configure this library to not register its migrations.
@@ -50,41 +52,54 @@ class MailTracker
         $this->purgeOldRecords();
     }
 
-    public function messageSent(MessageSent $event)
+    public function messageSent(MessageSent $event): void
     {
-        if ((config('mail.default') ?? config('mail.driver')) == 'ses') {
-            $this->updateSesMessageId($event->sent);
-        } else {
-            $this->updateMessageId($event->sent);
+        $sentMessage = $event->sent;
+        $headers = $sentMessage->getOriginalMessage()->getHeaders();
+        $hash = optional($headers->get('X-Mailer-Hash'))->getBody();
+        $sentEmail = SentEmail::where('hash', $hash)->first();
+
+        if ($sentEmail) {
+            $sentEmail->message_id = $this->callMessageIdResolverUsing($sentMessage);
+            $sentEmail->save();
         }
     }
 
-    protected function updateMessageId(SentMessage $message)
+    public function getMessageIdResolver(): Closure
     {
-        // Get the SentEmail object
-        $headers = $message->getOriginalMessage()->getHeaders();
-        $hash = optional($headers->get('X-Mailer-Hash'))->getBody();
-        $sent_email = SentEmail::where('hash', $hash)->first();
-
-        // Get info about the message-id from SES
-        if ($sent_email) {
-            $sent_email->message_id = $message->getMessageId();
-            $sent_email->save();
+        if (! isset($this->messageIdResolver)) {
+            $this->resolveMessageIdUsing($this->getDefaultMessageIdResolver());
         }
+
+        return $this->messageIdResolver;
     }
 
-    protected function updateSesMessageId(SentMessage $message)
+    public function resolveMessageIdUsing(Closure $resolver): self
     {
-        // Get the SentEmail object
-        $headers = $message->getOriginalMessage()->getHeaders();
-        $hash = optional($headers->get('X-Mailer-Hash'))->getBody();
-        $sent_email = SentEmail::where('hash', $hash)->first();
+        $this->messageIdResolver = $resolver;
+        return $this;
+    }
 
-        // Get info about the message-id from SES
-        if ($sent_email) {
-            $sent_email->message_id = $headers->get('X-SES-Message-ID')->getBody();
-            $sent_email->save();
-        }
+    protected function getDefaultMessageIdResolver(): Closure
+    {
+        return function (SentMessage $message) {
+            /** @var \Symfony\Component\Mime\Header\Headers $headers */
+            $headers = $message->getOriginalMessage()->getHeaders();
+
+            // Laravel supports multiple mail drivers.
+            // We try to guess if this email was sent using SES
+            if ($messageHeader = $headers->get('X-SES-Message-ID')) {
+                return $messageHeader->getBody();
+            }
+
+            // Second attempt, get the default message ID from symfony mailer
+            return $message->getMessageId();
+        };
+    }
+
+    protected function callMessageIdResolverUsing(SentMessage $message): string
+    {
+        return $this->getMessageIdResolver()(...func_get_args());
     }
 
     protected function addTrackers($html, $hash)
