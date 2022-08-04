@@ -108,7 +108,7 @@ class SentEmail extends Model
         }
         return implode(" | ", $responses);
     }
-    
+
     /**
      * Returns a collection of all headers requested from our stored header info
      *
