@@ -108,13 +108,15 @@ class SentEmail extends Model
         }
         return implode(" | ", $responses);
     }
-
+    
     /**
-     * Returns the header requested from our stored header info
+     * Returns a collection of all headers requested from our stored header info
+     *
+     * @return Illuminate\Support\Collection
      */
-    public function getHeader($key)
+    public function getAllHeaders()
     {
-        $headers = collect(preg_split("/\r\n|\n|\r/", $this->headers))
+        return collect(preg_split("/(\r\n|\n|\r)(?!\s)/", $this->headers))
             ->filter(function ($header) {
                 return preg_match("/:/", $header);
             })
@@ -130,7 +132,14 @@ class SentEmail extends Model
             ->transform(function ($header) {
                 return $header->get('value');
             });
-        return $headers->get($key);
+    }
+
+    /**
+     * Returns the header requested from our stored header info
+     */
+    public function getHeader($key)
+    {
+        return $this->getAllHeaders()->get($key);
     }
 
     public function urlClicks()
