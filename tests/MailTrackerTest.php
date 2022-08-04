@@ -1062,7 +1062,7 @@ class MailTrackerTest extends SetUpTest
     /**
      * @test
      */
-    public function it_retrieves_multiple_ccs_header_data()
+    public function it_retrieves_multiple_cc_recipients_from_header_data()
     {
         $faker = Factory::create();
         $email = $faker->email;
@@ -1097,8 +1097,19 @@ class MailTrackerTest extends SetUpTest
         }
 
         $track = SentEmail::orderBy('id', 'desc')->first();
-        $this->assertStringContainsString("cc.averylongemail1@johndoe.com", $track->getHeader('Cc'));
-        $this->assertStringContainsString("cc.averylongemail9@johndoe.com", $track->getHeader('Cc'));
+
+        $this->assertEquals(
+            'CC This Person With a Long Name 1 <cc.averylongemail1@johndoe.com>, ' .
+            'CC This Person With a Long Name 2 <cc.averylongemail2@johndoe.com>, ' .
+            'CC This Person With a Long Name 3 <cc.averylongemail3@johndoe.com>, ' .
+            'CC This Person With a Long Name 4 <cc.averylongemail4@johndoe.com>, ' .
+            'CC This Person With a Long Name 5 <cc.averylongemail5@johndoe.com>, ' .
+            'CC This Person With a Long Name 6 <cc.averylongemail6@johndoe.com>, ' .
+            'CC This Person With a Long Name 7 <cc.averylongemail7@johndoe.com>, ' .
+            'CC This Person With a Long Name 8 <cc.averylongemail8@johndoe.com>, ' .
+            'CC This Person With a Long Name 9 <cc.averylongemail9@johndoe.com>',
+            $track->getHeader('Cc')
+        );
     }
 
     /**
