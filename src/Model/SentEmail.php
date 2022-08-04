@@ -112,7 +112,7 @@ class SentEmail extends Model
     /**
      * Returns a collection of all headers requested from our stored header info
      *
-     * @return Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection
      */
     public function getAllHeaders()
     {
