@@ -117,12 +117,12 @@ class SentEmail extends Model
      */
     public function getAllHeaders()
     {
-        return collect(preg_split("/(\r\n|\n|\r)(?!\s)/", $this->headers))
+        return collect(preg_split("/(\r\n)(?!\s)/", $this->headers))
             ->filter(function ($header) {
                 return preg_match("/:/", $header);
             })
             ->transform(function ($header) {
-                $header = Str::replace(["\r\n", "\n", "\r"], '', $header);
+                $header = Str::replace("\r\n", '', $header);
                 list($key, $value) = explode(":", $header, 2);
                 return collect([
                     'key' => trim($key),
