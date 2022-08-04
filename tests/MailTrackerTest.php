@@ -1026,6 +1026,84 @@ class MailTrackerTest extends SetUpTest
     /**
      * @test
      */
+    public function it_retrieves_long_header_data()
+    {
+        $faker = Factory::create();
+        $email = $faker->email;
+        $subject = $faker->sentence;
+        $name = $faker->firstName . ' ' .$faker->lastName;
+        $header_test = Str::random(100) .', ' . Str::random(100) .', '. Str::random(100);
+        View::addLocation(__DIR__);
+        try {
+            Mail::send('email.test', [], function ($message) use ($email, $subject, $name, $header_test) {
+                $message->from('from@johndoe.com', 'From Name');
+                $message->sender('sender@johndoe.com', 'Sender Name');
+
+                $message->to($email, $name);
+
+                $message->cc('cc@johndoe.com', 'CC Name');
+                $message->bcc('bcc@johndoe.com', 'BCC Name');
+
+                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+
+                $message->subject($subject);
+
+                $message->priority(3);
+
+                $message->getHeaders()->addTextHeader('X-Header-Test', $header_test);
+            });
+        } catch (TransportException $e) {
+        }
+
+        $track = SentEmail::orderBy('id', 'desc')->first();
+        $this->assertEquals($header_test, $track->getHeader('X-Header-Test'));
+    }
+    
+    /**
+     * @test
+     */
+    public function it_retrieves_multiple_ccs_header_data()
+    {
+        $faker = Factory::create();
+        $email = $faker->email;
+        $subject = $faker->sentence;
+        $name = $faker->firstName . ' ' .$faker->lastName;
+        View::addLocation(__DIR__);
+        try {
+            Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
+                $message->from('from@johndoe.com', 'From Name');
+                $message->sender('sender@johndoe.com', 'Sender Name');
+
+                $message->to($email, $name);
+
+                $message->cc('cc.averylongemail1@johndoe.com', 'CC This Person With a Long Name 1');
+                $message->cc('cc.averylongemail2@johndoe.com', 'CC This Person With a Long Name 2');
+                $message->cc('cc.averylongemail3@johndoe.com', 'CC This Person With a Long Name 3');
+                $message->cc('cc.averylongemail4@johndoe.com', 'CC This Person With a Long Name 4');
+                $message->cc('cc.averylongemail5@johndoe.com', 'CC This Person With a Long Name 5');
+                $message->cc('cc.averylongemail6@johndoe.com', 'CC This Person With a Long Name 6');
+                $message->cc('cc.averylongemail7@johndoe.com', 'CC This Person With a Long Name 7');
+                $message->cc('cc.averylongemail8@johndoe.com', 'CC This Person With a Long Name 8');
+                $message->cc('cc.averylongemail9@johndoe.com', 'CC This Person With a Long Name 9');
+                $message->bcc('bcc@johndoe.com', 'BCC Name');
+
+                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+
+                $message->subject($subject);
+
+                $message->priority(3);
+            });
+        } catch (TransportException $e) {
+        }
+
+        $track = SentEmail::orderBy('id', 'desc')->first();
+        $this->assertStringContainsString("cc.averylongemail1@johndoe.com", $track->getHeader('Cc'));
+        $this->assertStringContainsString("cc.averylongemail9@johndoe.com", $track->getHeader('Cc'));
+    }
+
+    /**
+     * @test
+     */
     public function it_handles_secondary_connection()
     {
         // Create an old email to purge

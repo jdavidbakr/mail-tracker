@@ -3,6 +3,7 @@
 namespace jdavidbakr\MailTracker\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * @property string $hash
@@ -121,6 +122,7 @@ class SentEmail extends Model
                 return preg_match("/:/", $header);
             })
             ->transform(function ($header) {
+                $header = Str::replace(["\r\n", "\n", "\r"], '', $header);
                 list($key, $value) = explode(":", $header, 2);
                 return collect([
                     'key' => trim($key),
