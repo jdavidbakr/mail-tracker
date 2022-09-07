@@ -6,6 +6,6 @@
 		This is a test!
 	</h1>
 	<p>
-		<img src="{{ $message->embed(base_path()) }}" />
+		<img src="{{ $message->embed($imagePath) }}" />
 	</p>
 </body>

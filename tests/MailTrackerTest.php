@@ -241,7 +241,7 @@ class MailTrackerTest extends SetUpTest
             ->andReturn('random-hash');
 
         try {
-            Mail::send('email.embed-test', [], function ($message) use ($email, $name) {
+            Mail::send('email.embed-test', ['imagePath' => __DIR__ . '/email/example.png'], function ($message) use ($email, $name) {
                 $message->from('from@johndoe.com', 'From Name');
                 $message->sender('sender@johndoe.com', 'Sender Name');
 
@@ -256,8 +256,8 @@ class MailTrackerTest extends SetUpTest
 
                 $message->priority(3);
             });
-        } catch (Exception $e) {
-            // dd($e);
+        } catch (TransportException $e) {
+
         }
 
         $this->assertDatabaseHas('sent_emails', [

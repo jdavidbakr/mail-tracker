@@ -240,7 +240,7 @@ class MailTracker
                             $newParts[] = $part;
                         }
                     }
-                    $message->setBody(new AlternativePart(...$newParts));
+                    $message->setBody(new (get_class($original_content))(...$newParts));
                 } else {
                     $original_html = $original_content->getBody();
                     if($original_content->getMediaSubtype() == 'html') {
