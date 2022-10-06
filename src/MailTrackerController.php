@@ -63,23 +63,27 @@ class MailTrackerController extends Controller
         if (!$url) {
             $url = config('mail-tracker.redirect-missing-links-to') ?: '/';
         }
-        $tracker = Model\SentEmail::where('hash', $hash)
-            ->first();
-        if ($tracker) {
-            RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
-                ->onQueue(config('mail-tracker.tracker-queue'));
 
-            // If no opened at but has a clicked event then we can assume that it was in fact opened, the tracking pixel may have been blocked
-            if (config('mail-tracker.inject-pixel') && !$tracker->opened_at) {
-                $tracker->opened_at = now();
-                $tracker->save();
-            }
+        if (!request()->isMethod('HEAD')) {
+            $tracker = Model\SentEmail::where('hash', $hash)
+                                      ->first();
+            if ($tracker) {
+                RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
+                                  ->onQueue(config('mail-tracker.tracker-queue'));
 
-            if (!$tracker->clicked_at) {
-                $tracker->clicked_at = now();
-                $tracker->save();
+                // If no opened at but has a clicked event then we can assume that it was in fact opened, the tracking pixel may have been blocked
+                if (config('mail-tracker.inject-pixel') && !$tracker->opened_at) {
+                    $tracker->opened_at = now();
+                    $tracker->save();
+                }
+
+                if (!$tracker->clicked_at) {
+                    $tracker->clicked_at = now();
+                    $tracker->save();
+                }
             }
         }
+
         return redirect($url);
     }
 }
