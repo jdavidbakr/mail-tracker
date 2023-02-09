@@ -181,7 +181,7 @@ class MailTracker
      * @param  Email $message
      * @return void
      */
-    protected function createTrackers(Email $message)
+    protected function createTrackers($message)
     {
         foreach ($message->getTo() as $toAddress) {
             $to_email = $toAddress->getAddress();
