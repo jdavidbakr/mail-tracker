@@ -101,6 +101,19 @@ If you do not wish to have an email tracked, then you can add the `X-No-Track` h
 });
 ```
 
+### Storing content of mails in filesystem
+
+By default, the content of an e-mail is stored in the `content` column in the database so that the e-mail can be viewed after it has been sent. 
+If a lot of emails are sent, this can consume a lot of memory and slow down the database overall. It is possible to specify in the configuration that the content should be saved to a file in the file system.
+
+````php
+    'log-content-strategy' => 'filesystem',
+    'tracker-filesystem' => null
+    'tracker-filesystem-folder' => 'mail-tracker',
+````
+To use the filesystem you need to change the `log-content-strategy` from `database` to `filesystem`. 
+You can specify the disk with `tracker-filesystem` and the folder it should store the file in with `tracker-filesystem-folder`.
+
 ## Note on dev testing
 
 Several people have reported the tracking pixel not working while they were testing. What is happening with the tracking pixel is that the email client is connecting to your website to log the view. In order for this to happen, images have to be visible in the client, and the client has to be able to connect to your server.
