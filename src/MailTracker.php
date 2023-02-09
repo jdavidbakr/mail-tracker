@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use jdavidbakr\MailTracker\Events\EmailSentEvent;
 use jdavidbakr\MailTracker\Model\SentEmail;
 use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\Multipart\AlternativePart;
 use Symfony\Component\Mime\Part\Multipart\MixedPart;
 use Symfony\Component\Mime\Part\Multipart\RelatedPart;
@@ -177,10 +178,10 @@ class MailTracker
     /**
      * Create the trackers
      *
-     * @param  Swift_Mime_Message $message
+     * @param  Email $message
      * @return void
      */
-    protected function createTrackers($message)
+    protected function createTrackers(Email $message)
     {
         foreach ($message->getTo() as $toAddress) {
             $to_email = $toAddress->getAddress();
