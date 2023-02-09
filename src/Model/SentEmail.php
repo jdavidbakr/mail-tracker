@@ -5,6 +5,7 @@ namespace jdavidbakr\MailTracker\Model;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -169,5 +170,50 @@ class SentEmail extends Model
     public function urlClicks()
     {
         return $this->hasMany(SentEmailUrlClicked::class);
+    }
+
+    public function fillContent(string $originalHtml, string $hash)
+    {
+        $logContent = config('mail-tracker.log-content', true);
+
+        if(!$logContent) {
+            return;
+        }
+
+        $logContentStrategy = config('mail-tracker.log-content-strategy', 'database');
+
+        if(!in_array($logContentStrategy, ['database', 'filesystem'])) {
+            return;
+        }
+
+        $databaseContent = null;
+
+        // handling filesystem strategy
+        if ($logContentStrategy === 'filesystem') {
+            // store body in html file
+            $basePath = config('mail-tracker.tracker-filesystem-folder', 'mail-tracker');
+            $fileSystem = config('mail-tracker.tracker-filesystem');
+            $contentFilePath = "{$basePath}/{$hash}.html";
+
+            try {
+                Storage::disk($fileSystem)->put($contentFilePath, $originalHtml);
+            } catch (\Exception $e) {
+                Log::warning($e->getMessage());
+                // fail silently
+            }
+
+            $meta = collect($this->meta);
+            $meta->put('content_file_path', $contentFilePath);
+            $this->meta = $meta;
+        }
+
+        // handling database strategy
+        if ($logContentStrategy === 'database') {
+            $databaseContent = Str::length($originalHtml) > config('mail-tracker.content-max-size', 65535)
+                ? Str::substr($originalHtml, 0, config('mail-tracker.content-max-size', 65535)) . '...'
+                : $originalHtml;
+        }
+
+        $this->content = $databaseContent;
     }
 }

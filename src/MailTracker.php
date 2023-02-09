@@ -257,28 +257,8 @@ class MailTracker
                     }
                 }
 
-                $logContent = config('mail-tracker.log-content', true);
-                $logContentStrategy = config('mail-tracker.log-content-strategy', 'database');
-                $dbLoggedContent = null;
-                if ($logContent && $logContentStrategy === 'filesystem') {
-                    // store body in html file
-                    $basePath = config('mail-tracker.tracker-filesystem-folder', 'mail-tracker');
-                    $fileSystem = config('mail-tracker.tracker-filesystem');
-                    $contentFilePath = "{$basePath}/{$hash}.html";
-                    try {
-                        Storage::disk($fileSystem)->put($contentFilePath, $original_html);
-                    } catch (\Exception $e) {
-                        Log::warning($e->getMessage());
-                        // fail silently
-                    }
-                } else if ($logContent && $logContentStrategy === 'database') {
-                    $dbLoggedContent = Str::length($original_html) > config('mail-tracker.content-max-size', 65535)
-                        ? Str::substr($original_html, 0, config('mail-tracker.content-max-size', 65535)) . '...'
-                        : $original_html;
-                }
-
                 /** @var SentEmail $tracker */
-                $tracker = SentEmail::create([
+                $tracker = tap(new SentEmail([
                     'hash' => $hash,
                     'headers' => $headers->toString(),
                     'sender_name' => $from_name,
@@ -286,12 +266,14 @@ class MailTracker
                     'recipient_name' => $to_name,
                     'recipient_email' => $to_email,
                     'subject' => $subject,
-                    'content' => $dbLoggedContent,
                     'opens' => 0,
                     'clicks' => 0,
                     'message_id' => Str::uuid(),
-                    'meta' => isset($contentFilePath) ? ['content_file_path' => $contentFilePath] : [],
-                ]);
+                ]), function(SentEmail $sentEmail) use ($original_html, $hash) {
+                    $sentEmail->fillContent($original_html, $hash);
+
+                    $sentEmail->save();
+                });
 
                 Event::dispatch(new EmailSentEvent($tracker));
             }
