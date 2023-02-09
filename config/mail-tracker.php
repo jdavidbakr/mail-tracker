@@ -79,8 +79,8 @@ return [
     'log-content' => true,
 
     /**
-     * Determines whether or not the body should be stored in a file instead of database
-     * Can be wither 'database' or 'filesystem'
+     * Determines whether the body should be stored in a file instead of database
+     * Can be either 'database' or 'filesystem'
      */
     'log-content-strategy' => 'database',
 

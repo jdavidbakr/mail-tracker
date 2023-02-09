@@ -1229,12 +1229,16 @@ class MailTrackerTest extends SetUpTest
         $str->shouldReceive('random')
             ->once()
             ->andReturn('random-hash');
-        Storage::fake(config('mail-tracker.tracker-filesystem'));
-        config()->set('mail-tracker.log-content-strategy', 'filesystem');
 
+
+        config()->set('mail-tracker.log-content-strategy', 'filesystem');
+        config()->set('mail-tracker.tracker-filesystem', 'filesystem');
+        config()->set('mail-tracker.tracker-filesystem-folder', 'mail-tracker');
         config()->set('filesystems.disks.testing.driver', 'local');
         config()->set('filesystems.disks.testing.root', realpath(__DIR__.'/../storage'));
         config()->set('filesystems.default', 'testing');
+
+        Storage::fake(config('mail-tracker.tracker-filesystem'));
 
         try {
             Mail::raw($content, function ($message) use ($email, $name) {

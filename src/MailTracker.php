@@ -266,7 +266,7 @@ class MailTracker
                     $fileSystem = config('mail-tracker.tracker-filesystem');
                     $contentFilePath = "{$basePath}/{$hash}.html";
                     try {
-                        Storage::disk($fileSystem)->put($contentFilePath, $original_content);
+                        Storage::disk($fileSystem)->put($contentFilePath, $original_html);
                     } catch (\Exception $e) {
                         Log::warning($e->getMessage());
                         // fail silently
