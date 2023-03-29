@@ -22,7 +22,15 @@ class SNSController extends Controller
             // for SNSMessage we have to pass the json data in $request->message
             $message = new SNSMessage(json_decode($request->message, true));
         } else {
-            $message = SNSMessage::fromRawPostData();
+            // get body from request
+            $body = $request->getContent();
+
+            // Make sure the SNS-provided header exists.
+            if (!isset($_SERVER['HTTP_X_AMZ_SNS_MESSAGE_TYPE'])) {
+                throw new \RuntimeException('SNS message type header not provided.');
+            }
+
+            $message = SNSMessage::fromJsonString($body);
             $validator = new SNSMessageValidator();
             $validator->validate($message);
         }
@@ -30,7 +38,7 @@ class SNSController extends Controller
         if (config('mail-tracker.sns-topic') && $message->offsetGet('TopicArn') != config('mail-tracker.sns-topic')) {
             return 'invalid topic ARN';
         }
-        
+
         switch ($message->offsetGet('Type')) {
             case 'SubscriptionConfirmation':
                 return $this->confirm_subscription($message);
