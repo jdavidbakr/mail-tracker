@@ -20,6 +20,13 @@ class RecordTrackingJob implements ShouldQueue
     public $sentEmail;
     public $ipAddress;
 
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     *
+     * @var int
+     */
+    public $maxExceptions = 3;
+
     public function __construct($sentEmail, $ipAddress)
     {
         $this->sentEmail = $sentEmail;

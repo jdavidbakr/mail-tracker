@@ -19,6 +19,13 @@ class RecordDeliveryJob implements ShouldQueue
 
     public $message;
 
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     *
+     * @var int
+     */
+    public $maxExceptions = 3;
+
     public function __construct($message)
     {
         $this->message = $message;

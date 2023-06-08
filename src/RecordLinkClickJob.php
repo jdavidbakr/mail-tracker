@@ -21,6 +21,13 @@ class RecordLinkClickJob implements ShouldQueue
     public $url;
     public $ipAddress;
 
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     *
+     * @var int
+     */
+    public $maxExceptions = 3;
+
     public function retryUntil()
     {
         return now()->addDays(5);
