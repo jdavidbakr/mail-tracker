@@ -98,11 +98,13 @@ trait IsSentEmailModel
         if ($content = $this->attributes['content']) {
             return $content;
         }
-        if ($contentFilePath = $this->meta->get('content_file_path')) {
-            try {
-                return Storage::disk(config('mail-tracker.tracker-filesystem'))->get($contentFilePath);
-            } catch (FileNotFoundException $e) {
-                return null;
+        if ($this->meta?->has('content_file_path')) {
+            if ($contentFilePath = $this->meta->get('content_file_path')) {
+                try {
+                    return Storage::disk(config('mail-tracker.tracker-filesystem'))->get($contentFilePath);
+                } catch (FileNotFoundException $e) {
+                    return null;
+                }
             }
         }
         return null;
