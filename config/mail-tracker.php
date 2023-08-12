@@ -99,4 +99,9 @@ return [
      * Size limit for content length stored in database
      */
     'content-max-size' => 65535,
+
+    /**
+     * Length of time to default past email search - if set, will set the default past limit to the amount of days below (Ex: => 356)
+     */
+    'search-date-start' => null,
 ];

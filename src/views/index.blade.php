@@ -15,21 +15,43 @@
         </div>
         <div class="row">
             <div class="col-sm-12 text-center">
-                <form action="{{ route('mailTracker_Search') }}" method="post" class="form-inline">
+                <form action="{{ route('mailTracker_Search') }}" method="post">
                     {!! csrf_field() !!}
-                    <div class="form-group">
-                        <label for="search">
-                            Search
-                        </label>
-                        <input type="text" name="search" id="search" value="{{ session('mail-tracker-index-search') }}">
+                    <div class="col-sm-{{ !is_null(config('mail-tracker.search-date-start')) ? '3' : '4' }}">
+                        <div class="form-group">
+                            <label for="search" class="form-label">
+                                Search
+                            </label>
+                            <input type="text" class="form-control" name="search" id="search" value="{{ session('mail-tracker-index-search') }}">
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-default">
-                        Search
-                    </button>
-                    <div class="btn btn-default">
-                        <a href="{{ route('mailTracker_ClearSearch') }}">
-                            Clear Search
-                        </a>
+                    @if( !is_null(config('mail-tracker.search-date-start')) )
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="date_start" class="form-label">
+                                    Sent at - beginning
+                                </label>
+                                <input type="date" class="form-control" name="date_start" id="date_start" value="{{ session('mail-tracker-index-date-start') }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="date_end" class="form-label">
+                                    Sent at - end
+                                </label>
+                                <input type="date" class="form-control" name="date_end" id="date_end" value="{{ session('mail-tracker-index-date-end') }}">
+                            </div>
+                        </div>
+                    @endif
+                    <div class="col-sm-{{ !is_null(config('mail-tracker.search-date-start')) ? '3' : '8' }}">
+                        <button type="submit" class="btn btn-default">
+                            Search
+                        </button>
+                        <div class="btn btn-default">
+                            <a href="{{ route('mailTracker_ClearSearch') }}">
+                                Clear Search
+                            </a>
+                        </div>
                     </div>
                 </form>
                 <hr>

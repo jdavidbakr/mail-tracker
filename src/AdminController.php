@@ -13,6 +13,18 @@ class AdminController extends Controller
     public function postSearch(Request $request)
     {
         session(['mail-tracker-index-search' => $request->search]);
+        if (!is_null(config('mail-tracker.search-date-start'))) {
+            session(
+                [
+                    'mail-tracker-index-date-start' => $request->date_start
+                ]
+            );
+            session(
+                [
+                    'mail-tracker-index-date-end' => $request->date_end
+                ]
+            );
+        }
         return redirect(route('mailTracker_Index'));
     }
 
@@ -22,6 +34,18 @@ class AdminController extends Controller
     public function clearSearch()
     {
         session(['mail-tracker-index-search' => null]);
+        if (!is_null(config('mail-tracker.search-date-start'))) {
+            session(
+                [
+                    'mail-tracker-index-date-start' => now()
+                        ->subDays(
+                            config('mail-tracker.search-date-start')
+                        )
+                        ->toDateString()
+                ]
+            );
+            session(['mail-tracker-index-date-end' => now()->toDateString()]);
+        }
         return redirect(route('mailTracker_Index'));
     }
 
@@ -34,6 +58,8 @@ class AdminController extends Controller
     {
         session(['mail-tracker-index-page' => request()->page]);
         $search = session('mail-tracker-index-search');
+        $date_start = session('mail-tracker-index-date-start');
+        $date_end = session('mail-tracker-index-date-end');
 
         $query = MailTracker::sentEmailModel()->query();
 
@@ -47,6 +73,17 @@ class AdminController extends Controller
                         ->orWhere('recipient_email', 'like', '%'.$term.'%')
                         ->orWhere('subject', 'like', '%'.$term.'%');
                 });
+            }
+        }
+        if (!is_null(config('mail-tracker.search-date-start'))) {
+            if (!is_null($date_start) && !is_null($date_end)) {
+                $query->whereDate('created_at', '>=', $date_start)
+                    ->whereDate('created_at', '<=', $date_end);
+            } elseif (!is_null($date_start)) {
+                $query->whereDate('created_at', '>=', $date_start)
+                    ->whereDate('created_at', '<=', now());
+            } elseif (!is_null($date_end)) {
+                $query->whereDate('created_at', '<=', $date_end);
             }
         }
         $query->orderBy('created_at', 'desc');
