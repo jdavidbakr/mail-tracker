@@ -256,6 +256,9 @@ class MailTracker
                     // Don't track this email
                     continue;
                 }
+                // Custom headers; save in variable and then remove it
+                $user_id = $headers->get('X-User-ID')->getBody();
+                $headers->remove('X-User-ID');
                 do {
                     $hash = app(Str::class)->random(32);
                     $used = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)->count();
@@ -317,11 +320,12 @@ class MailTracker
 
                 /** @var SentEmail $tracker */
                 $tracker = tap(MailTracker::sentEmailModel([
+                    'user_id' => $user_id,
                     'hash' => $hash,
                     'headers' => $headers->toString(),
                     'sender_name' => $from_name,
                     'sender_email' => $from_email,
-                    'recipient_name' => $to_name,
+                    //'recipient_name' => $to_name, // No need since user_id is available
                     'recipient_email' => $to_email,
                     'subject' => $subject,
                     'opens' => 0,
