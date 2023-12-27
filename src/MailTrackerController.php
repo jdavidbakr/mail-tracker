@@ -64,7 +64,7 @@ class MailTrackerController extends Controller
             $url = config('mail-tracker.redirect-missing-links-to') ?: '/';
         }
         $tracker = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)
-            ->firstOrFail();
+            ->first();
         if ($tracker) {
             RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
                 ->onQueue(config('mail-tracker.tracker-queue'));
