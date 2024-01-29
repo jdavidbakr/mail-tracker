@@ -187,7 +187,7 @@ trait IsSentEmailModel
         // handling database strategy
         if ($logContentStrategy === 'database') {
             $databaseContent = Str::length($originalHtml) > config('mail-tracker.content-max-size', 65535)
-                ? Str::substr($originalHtml, 0, config('mail-tracker.content-max-size', 65535)) . '...'
+                ? Str::substr($originalHtml, 0, config('mail-tracker.content-max-size', 65532)) . '...'
                 : $originalHtml;
         }
 
