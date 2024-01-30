@@ -250,12 +250,12 @@ class MailTracker
                 $from_email = $fromAddress->getAddress();
                 $from_name = $fromAddress->getName();
                 $headers = $message->getHeaders();
+
+                // Don't track this email
                 if ($headers->get('X-No-Track')) {
-                    // Don't send with this header
-                    $headers->remove('X-No-Track');
-                    // Don't track this email
                     continue;
                 }
+
                 do {
                     $hash = app(Str::class)->random(32);
                     $used = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)->count();
@@ -336,6 +336,9 @@ class MailTracker
                 Event::dispatch(new EmailSentEvent($tracker));
             }
         }
+
+        // Remove this header if it was set
+        $message->getHeaders()->remove('X-No-Track');
     }
 
     /**
