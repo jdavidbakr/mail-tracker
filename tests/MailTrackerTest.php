@@ -298,15 +298,17 @@ class MailTrackerTest extends SetUpTest
     {
         $faker = Factory::create();
         $email = $faker->email;
+        $anotherEmail = $faker->email;
         $subject = $faker->sentence;
         $name = $faker->firstName . ' ' .$faker->lastName;
         View::addLocation(__DIR__);
         try {
-            Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
+            Mail::send('email.test', [], function ($message) use ($email, $anotherEmail, $subject, $name) {
                 $message->from('from@johndoe.com', 'From Name');
                 $message->sender('sender@johndoe.com', 'Sender Name');
 
                 $message->to($email, $name);
+                $message->to($anotherEmail, $name);
 
                 $message->cc('cc@johndoe.com', 'CC Name');
                 $message->bcc('bcc@johndoe.com', 'BCC Name');
@@ -323,13 +325,20 @@ class MailTrackerTest extends SetUpTest
         }
 
         $this->assertDatabaseMissing('sent_emails', [
-                'recipient' => $name.' <'.$email.'>',
-                'subject' => $subject,
-                'sender_name' => 'From Name',
-                'sender_email' => 'from@johndoe.com',
-                'recipient_name' => $name,
-                'recipient_email' => $email,
-            ]);
+            'subject' => $subject,
+            'sender_name' => 'From Name',
+            'sender_email' => 'from@johndoe.com',
+            'recipient_name' => $name,
+            'recipient_email' => $email,
+        ]);
+
+        $this->assertDatabaseMissing('sent_emails', [
+            'subject' => $subject,
+            'sender_name' => 'From Name',
+            'sender_email' => 'from@johndoe.com',
+            'recipient_name' => $name,
+            'recipient_email' => $anotherEmail,
+        ]);
     }
 
     /**
