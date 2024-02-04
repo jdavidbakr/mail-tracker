@@ -4,14 +4,10 @@ namespace jdavidbakr\MailTracker;
 
 use App\Http\Requests;
 use Event;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider;
-
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use jdavidbakr\MailTracker\Events\LinkClickedEvent;
+use jdavidbakr\MailTracker\Events\ValidActionEvent;
 use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
-use jdavidbakr\MailTracker\RecordLinkClickJob;
-use jdavidbakr\MailTracker\RecordTrackingJob;
 use Response;
 
 class MailTrackerController extends Controller
@@ -31,11 +27,17 @@ class MailTrackerController extends Controller
         $tracker = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)
             ->first();
         if ($tracker) {
-            RecordTrackingJob::dispatch($tracker, request()->ip())
-                ->onQueue(config('mail-tracker.tracker-queue'));
-            if (!$tracker->opened_at) {
-                $tracker->opened_at = now();
-                $tracker->save();
+            $event = new ValidActionEvent($tracker);
+
+            \Illuminate\Support\Facades\Event::dispatch($event);
+
+            if (!$event->skip) {
+                RecordTrackingJob::dispatch($tracker, request()->ip())
+                    ->onQueue(config('mail-tracker.tracker-queue'));
+                if (!$tracker->opened_at) {
+                    $tracker->opened_at = now();
+                    $tracker->save();
+                }
             }
         }
 
@@ -66,18 +68,24 @@ class MailTrackerController extends Controller
         $tracker = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)
             ->first();
         if ($tracker) {
-            RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
-                ->onQueue(config('mail-tracker.tracker-queue'));
+            $event = new ValidActionEvent($tracker);
 
-            // If no opened at but has a clicked event then we can assume that it was in fact opened, the tracking pixel may have been blocked
-            if (config('mail-tracker.inject-pixel') && !$tracker->opened_at) {
-                $tracker->opened_at = now();
-                $tracker->save();
-            }
+            \Illuminate\Support\Facades\Event::dispatch($event);
 
-            if (!$tracker->clicked_at) {
-                $tracker->clicked_at = now();
-                $tracker->save();
+            if (!$event->skip) {
+                RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
+                    ->onQueue(config('mail-tracker.tracker-queue'));
+
+                // If no opened at but has a clicked event then we can assume that it was in fact opened, the tracking pixel may have been blocked
+                if (config('mail-tracker.inject-pixel') && !$tracker->opened_at) {
+                    $tracker->opened_at = now();
+                    $tracker->save();
+                }
+
+                if (!$tracker->clicked_at) {
+                    $tracker->clicked_at = now();
+                    $tracker->save();
+                }
             }
         }
         return redirect($url);
