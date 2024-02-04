@@ -143,6 +143,39 @@ class OwnEmailSentModel extends Model implements SentEmailModel {
 }
 ```
 
+## Skip Tracking for Specific Emails
+
+If you have a specific email that you do not want to track, you can add the `X-No-Track` header to the email. This will prevent the email from being tracked. The header will be removed from the email prior to being sent.
+
+In laravel 9 onwards you can introduce a headers method to your Mailable class. This will stop the tracking pixel/click tracking from applying to the Mailable
+```php
+public function headers()
+{
+    return [
+        'X-No-Track' => Str::random(10),
+    ];
+}
+```
+
+## Skipping Open/Click Tracking for Anti-virus/Spam Filters
+
+Some mail servers might scan emails before they deliver which can trigger the tracking pixel, or even clicked links. You can add an event listener to the ValidActionEvent to handle this. 
+
+```php
+class ValidUserListener {
+    public function handle(ValidActionEvent $event)
+    {
+        if (in_array(request()->userAgent(), ['Mozilla/5.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246 Mozilla/5.0']) {
+            $event->skip = true;
+        }
+    }
+}
+```
+
+Ensure you add the listener to the `ValidActionEvent` in your `EventServiceProvider`, if you aren't using automatic event discovery.
+
+```php
+
 ## Note on dev testing
 
 Several people have reported the tracking pixel not working while they were testing. What is happening with the tracking pixel is that the email client is connecting to your website to log the view. In order for this to happen, images have to be visible in the client, and the client has to be able to connect to your server.
