@@ -30,9 +30,9 @@ class SNSController extends Controller
             $body = $request->getContent();
 
             // Make sure the SNS-provided header exists.
-            if (!isset($_SERVER['HTTP_X_AMZ_SNS_MESSAGE_TYPE'])) {
+            /**if (!isset($_SERVER['HTTP_X_AMZ_SNS_MESSAGE_TYPE'])) {
                 throw new \RuntimeException('SNS message type header not provided.');
-            }
+            }**/
 
             $message = SNSMessage::fromJsonString($body);
             $validator = app(SNSMessageValidator::class);
