@@ -29,6 +29,7 @@ class SNSController extends Controller
             // get body from request
             $body = $request->getContent();
 
+            // Make sure the SNS-provided header exists.
             $messageType = $request->header('x-amz-sns-message-type');
             if (!$messageType) {
                 throw new \RuntimeException('SNS message type header not provided.');
