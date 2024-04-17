@@ -45,4 +45,22 @@ class SentEmail extends Model implements SentEmailModel
         'opened_at' => 'datetime',
         'clicked_at' => 'datetime',
     ];
+
+    protected $appends = [
+        'domains_in_content'
+    ];
+
+    public function getDomainsInContentAttribute(){
+        preg_match_all("/(<a[^>]*href=[\"])([^\"]*)/", $this->content, $matches);
+        if ( ! isset($matches[2]) ) return [];
+        $domains = [];
+        foreach($matches[2] as $url){
+            $domain = parse_url($url, PHP_URL_HOST);
+            if ( ! in_array($domain, $domains) ){
+                $domains[] = $domain;
+            }
+        }
+
+        return $domains;
+    }
 }
