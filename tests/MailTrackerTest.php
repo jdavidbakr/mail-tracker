@@ -405,12 +405,14 @@ class MailTrackerTest extends SetUpTest
         Carbon::setTestNow(now());
         Config::set('mail-tracker.tracker-queue', 'alt-queue');
         Bus::fake();
+        $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
+
         $track = MailTracker::sentEmailModel()->newQuery()->create([
                 'hash' => Str::random(32),
+                'content' => 'Hello, visit my website <a href="'.$redirect.'">'.$redirect.'</a>',
             ]);
         $clicks = $track->clicks;
         $clicks++;
-        $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
         $url = route('mailTracker_l', [
                 MailTracker::hash_url($redirect), // Replace slash with dollar sign
                 $track->hash
@@ -436,10 +438,11 @@ class MailTrackerTest extends SetUpTest
         Config::set('mail-tracker.inject-pixel', true);
         Config::set('mail-tracker.tracker-queue', 'alt-queue');
         Bus::fake();
+        $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
         $track = MailTracker::sentEmailModel()->newQuery()->create([
                 'hash' => Str::random(32),
+                'content' => 'Hello, visit my website <a href="'.$redirect.'">'.$redirect.'</a>',
             ]);
-        $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
         $url = route('mailTracker_n', [
                 'l' => $redirect,
                 'h' => $track->hash
@@ -464,7 +467,7 @@ class MailTrackerTest extends SetUpTest
     /**
      * @test
      */
-    public function it_redirects_even_if_no_sent_email_exists()
+    public function it_redirects_to_fallback_if_the_sent_email_does_not_exists()
     {
         $track = MailTracker::sentEmailModel()->newQuery()->create([
                 'hash' => Str::random(32),
@@ -473,6 +476,7 @@ class MailTrackerTest extends SetUpTest
         $clicks = $track->clicks;
         $clicks++;
 
+        Config::set('mail-tracker.redirect-missing-links-to', '/home');
         $redirect = 'http://'.Str::random(15).'.com/'.Str::random(10).'/'.Str::random(10).'/'.rand(0, 100).'/'.rand(0, 100).'?page='.rand(0, 100).'&x='.Str::random(32);
 
         // Do it with an invalid hash
@@ -482,7 +486,28 @@ class MailTrackerTest extends SetUpTest
             ]);
         $response = $this->get($url);
 
-        $response->assertRedirect($redirect);
+        $response->assertRedirect('/home');
+    }
+
+
+    /**
+     * @test
+     */
+    public function it_redirects_to_fallback_for_invalid_domain()
+    {
+        Event::fake();
+        $track = MailTracker::sentEmailModel()->newQuery()->create([
+            'hash' => Str::random(32),
+            'content' => 'This is some content with a link to <a href="https://goodwebsite.com">Good website</a>',
+        ]);
+
+        Config::set('mail-tracker.redirect-missing-links-to', '/home');
+
+        $invalidUrl = 'http://evil.com'; // Domain not present in email content
+
+        $response = $this->get(route('mailTracker_l', [MailTracker::hash_url($invalidUrl), $track->hash]));
+
+        $response->assertRedirect('/home');
     }
 
     /**

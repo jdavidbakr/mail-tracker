@@ -47,10 +47,10 @@ class SentEmail extends Model implements SentEmailModel
     ];
 
     protected $appends = [
-        'domains_in_content'
+        'domains_in_context'
     ];
 
-    public function getDomainsInContentAttribute(){
+    public function getDomainsInContextAttribute(){
         preg_match_all("/(<a[^>]*href=[\"])([^\"]*)/", $this->content, $matches);
         if ( ! isset($matches[2]) ) return [];
         $domains = [];
