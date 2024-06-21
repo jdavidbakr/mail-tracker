@@ -174,8 +174,6 @@ class ValidUserListener {
 
 Ensure you add the listener to the `ValidActionEvent` in your `EventServiceProvider`, if you aren't using automatic event discovery.
 
-```php
-
 ## Note on dev testing
 
 Several people have reported the tracking pixel not working while they were testing. What is happening with the tracking pixel is that the email client is connecting to your website to log the view. In order for this to happen, images have to be visible in the client, and the client has to be able to connect to your server.
