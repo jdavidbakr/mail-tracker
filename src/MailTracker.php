@@ -184,7 +184,7 @@ class MailTracker
         $html = str_replace("\n", $linebreak, $html);
 
         if (preg_match("/^(.*<body[^>]*>)(.*)$/", $html, $matches)) {
-            $html = $matches[1].$matches[2].$tracking_pixel;
+            $html = $matches[1].$tracking_pixel.$matches[2];
         } else {
             $html = $html . $tracking_pixel;
         }
