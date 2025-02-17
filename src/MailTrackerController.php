@@ -92,6 +92,10 @@ class MailTrackerController extends Controller
             }
         }
 
+        if ($tracker && is_null($tracker->content)) {
+            return redirect($url);
+        }
+
         if ( ! $tracker || empty($tracker->domains_in_context) || ! in_array($url_host, $tracker->domains_in_context) ){
             return redirect(config('mail-tracker.redirect-missing-links-to') ?: '/');
         }
