@@ -281,7 +281,7 @@ class MailTracker
                                 $part->getMediaSubtype(),
                                 null
                             );
-                        } else if ($part->getMediaSubtype() == 'alternative') {
+                        } else if (in_array($part->getMediaSubtype(), ['alternative', 'related'])) {
                             if (method_exists($part, 'getParts')) {
                                 foreach ($part->getParts() as $p) {
                                     if($p->getMediaSubtype() == 'html') {
