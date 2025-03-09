@@ -11,6 +11,7 @@ class ValidActionEvent
     use Dispatchable;
 
     public $skip = false;
+    public $sent_email;
 
     public function __construct(Model|SentEmailModel $sent_email)
     {
