@@ -51,14 +51,50 @@ class SentEmail extends Model implements SentEmailModel
     ];
 
     public function getDomainsInContextAttribute(){
-        preg_match_all("/(<a[^>]*href=[\"])([^\"]*)/", $this->content, $matches);
-        if ( ! isset($matches[2]) ) return [];
         $domains = [];
-        foreach($matches[2] as $url){
-            $domain = parse_url($url, PHP_URL_HOST);
-            if ( ! in_array($domain, $domains) ){
-                $domains[] = $domain;
+
+        // If the content of the email is logged in the sent_emails table (default behavior),
+        // get the domains from the content.
+        if (config('mail-tracker.log-content')) {
+            // Match href links in <a> tags (handles both single and double quotes)
+            preg_match_all("/<a[^>]*href=['\"]([^'\"]+)['\"]/i", $this->content, $matches);
+
+            if (empty($matches[1])) {
+                return [];
             }
+
+            foreach ($matches[1] as $url) {
+                // Skip invalid, mailto, tel, and JavaScript links
+                if (preg_match('/^(mailto:|tel:|javascript:|#)/i', $url)) {
+                    continue;
+                }
+
+                // Decode URL in case it's encoded inside a tracking link
+                $decodedUrl = urldecode($url);
+
+                // Extract original domain (including subdomains)
+                $originalDomain = strtolower(parse_url($decodedUrl, PHP_URL_HOST));
+
+                if ($originalDomain && !in_array($originalDomain, $domains)) {
+                    $domains[] = $originalDomain; // Store the tracking domain
+                }
+
+                // Check if the URL contains a tracking redirect (`?l=`)
+                if (preg_match('/[?&]l=([^&]+)/', $decodedUrl, $redirectMatch)) {
+                    $finalUrl = urldecode($redirectMatch[1]); // Extract and decode the real target URL
+
+                    // Extract final destination domain (including subdomains)
+                    $finalDomain = strtolower(parse_url($finalUrl, PHP_URL_HOST));
+
+                    if ($finalDomain && !in_array($finalDomain, $domains)) {
+                        $domains[] = $finalDomain; // Store the real destination domain
+                    }
+                }
+            }
+        } else {
+            // If the content of the email is not logged in the sent_emails table,
+            // return an array of the domains you are tracking in your email.
+            $domains = [];
         }
 
         return $domains;
