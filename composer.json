@@ -1,5 +1,5 @@
 {
-    "name": "jdavidbakr/mail-tracker",
+    "name": "mohamedds/mail-tracker",
     "type": "library",
     "description": "Logs and tracks all outgoing emails from Laravel",
     "keywords": [
