@@ -34,7 +34,7 @@ class RecordDeliveryJob implements ShouldQueue
     {
         $emailHash = collect($this->message->mail->headers)->where('name', 'X-Mailer-Hash')->first()?->value;
         if ($emailHash) { 
-            $sent_email = SentEmail::where('message_id', $emailHash)->first();
+            $sent_email = SentEmail::where('hash', $emailHash)->first();
         }
         
         if (isset($sent_email)) {
