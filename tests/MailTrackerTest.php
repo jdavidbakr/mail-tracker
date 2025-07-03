@@ -2,7 +2,6 @@
 
 namespace jdavidbakr\MailTracker\Tests;
 
-use Exception;
 use Faker\Factory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +32,6 @@ use jdavidbakr\MailTracker\RecordLinkClickJob;
 use jdavidbakr\MailTracker\RecordTrackingJob;
 use Mockery;
 use Orchestra\Testbench\Exceptions\Handler;
-use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Header\Headers;
 use Symfony\Component\Mime\Part\AbstractPart;
@@ -101,24 +99,22 @@ class MailTrackerTest extends SetUpTest
         $subject = $faker->sentence;
         $name    = $faker->firstName . ' ' . $faker->lastName;
         View::addLocation(__DIR__);
-        try {
-            Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
+        Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->cc('cc@johndoe.com', 'CC Name');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->to($email, $name);
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->cc('cc@johndoe.com', 'CC Name');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->subject($subject);
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->priority(3);
-            });
-        } catch (TransportException $e) {
-        }
+            $message->subject($subject);
+
+            $message->priority(3);
+        });
 
         Event::assertDispatched(EmailSentEvent::class);
 
@@ -154,14 +150,11 @@ class MailTrackerTest extends SetUpTest
             ->once()
             ->andReturn('random-hash');
 
-        try {
-            Mail::raw($content, function ($message) use ($email, $name) {
-                $message->from('from@johndoe.com', 'From Name');
+        Mail::raw($content, function ($message) use ($email, $name) {
+            $message->from('from@johndoe.com', 'From Name');
 
-                $message->to($email, $name);
-            });
-        } catch (Exception $e) {
-        }
+            $message->to($email, $name);
+        });
 
         $this->assertDatabaseHas('sent_emails', [
             'hash'            => 'random-hash',
@@ -187,11 +180,7 @@ class MailTrackerTest extends SetUpTest
         $mailable = new TestMailable();
         $mailable->subject('this is the message subject.');
 
-        try {
-            Mail::to($email)->send($mailable);
-        } catch (Exception $e) {
-            // dd($e);
-        }
+        Mail::to($email)->send($mailable);
 
         $this->assertDatabaseHas('sent_emails', [
             'hash'            => 'random-hash',
@@ -214,11 +203,7 @@ class MailTrackerTest extends SetUpTest
         $mailable->subject('this is  the message subject.');
         $mailable->attach(__DIR__ . '/email/test.blade.php');
 
-        try {
-            Mail::to($email)->send($mailable);
-        } catch (Exception $e) {
-            // dd($e);
-        }
+        Mail::to($email)->send($mailable);
 
         $this->assertDatabaseHas('sent_emails', [
             'hash'            => 'random-hash',
@@ -238,25 +223,21 @@ class MailTrackerTest extends SetUpTest
             ->once()
             ->andReturn('random-hash');
 
-        try {
-            Mail::send('email.embed-test', ['imagePath' => __DIR__ . '/email/example.png'], function ($message) use ($email, $name) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
+        Mail::send('email.embed-test', ['imagePath' => __DIR__ . '/email/example.png'], function ($message) use ($email, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
+            $message->to($email, $name);
 
-                $message->cc('cc@johndoe.com', 'CC Name');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->cc('cc@johndoe.com', 'CC Name');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->subject('This is the test subject');
+            $message->subject('This is the test subject');
 
-                $message->priority(3);
-            });
-        } catch (TransportException $e) {
-
-        }
+            $message->priority(3);
+        });
 
         $this->assertDatabaseHas('sent_emails', [
             'hash'            => 'random-hash',
@@ -282,10 +263,7 @@ class MailTrackerTest extends SetUpTest
             'mime' => 'application/pdf',
         ]);
 
-        try {
-            Mail::to($email)->send($mailable);
-        } catch (Exception $e) {
-        }
+        Mail::to($email)->send($mailable);
 
         $this->assertDatabaseHas('sent_emails', [
             'hash'            => 'random-hash',
@@ -304,27 +282,25 @@ class MailTrackerTest extends SetUpTest
         $subject      = $faker->sentence;
         $name         = $faker->firstName . ' ' . $faker->lastName;
         View::addLocation(__DIR__);
-        try {
-            Mail::send('email.test', [], function ($message) use ($email, $anotherEmail, $subject, $name) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
-                $message->to($anotherEmail, $name);
+        Mail::send('email.test', [], function ($message) use ($email, $anotherEmail, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->cc('cc@johndoe.com', 'CC Name');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->to($email, $name);
+            $message->to($anotherEmail, $name);
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->cc('cc@johndoe.com', 'CC Name');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->subject($subject);
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->priority(3);
+            $message->subject($subject);
 
-                $message->getHeaders()->addTextHeader('X-No-Track', Str::random(10));
-            });
-        } catch (TransportException $e) {
-        }
+            $message->priority(3);
+
+            $message->getHeaders()->addTextHeader('X-No-Track', Str::random(10));
+        });
 
         $this->assertDatabaseMissing('sent_emails', [
             'subject'         => $subject,
@@ -974,26 +950,24 @@ class MailTrackerTest extends SetUpTest
         $name        = $faker->firstName . ' ' . $faker->lastName;
         $header_test = Str::random(10);
         \View::addLocation(__DIR__);
-        try {
-            \Mail::send('email.test', [], function ($message) use ($email, $subject, $name, $header_test) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
+        \Mail::send('email.test', [], function ($message) use ($email, $subject, $name, $header_test) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->cc('cc@johndoe.com', 'CC Name');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->to($email, $name);
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->cc('cc@johndoe.com', 'CC Name');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->subject($subject);
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->priority(3);
+            $message->subject($subject);
 
-                $message->getHeaders()->addTextHeader('X-Header-Test', $header_test);
-            });
-        } catch (TransportException $e) {
-        }
+            $message->priority(3);
+
+            $message->getHeaders()->addTextHeader('X-Header-Test', $header_test);
+        });
 
         $track = MailTracker::sentEmailModel()->newQuery()->orderBy('id', 'desc')->first();
         $this->assertEquals($header_test, $track->getHeader('X-Header-Test'));
@@ -1010,26 +984,24 @@ class MailTrackerTest extends SetUpTest
         $name        = $faker->firstName . ' ' . $faker->lastName;
         $header_test = Str::random(100) . ', ' . Str::random(100) . ', ' . Str::random(100);
         View::addLocation(__DIR__);
-        try {
-            Mail::send('email.test', [], function ($message) use ($email, $subject, $name, $header_test) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
+        Mail::send('email.test', [], function ($message) use ($email, $subject, $name, $header_test) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->cc('cc@johndoe.com', 'CC Name');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->to($email, $name);
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->cc('cc@johndoe.com', 'CC Name');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->subject($subject);
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->priority(3);
+            $message->subject($subject);
 
-                $message->getHeaders()->addTextHeader('X-Header-Test', $header_test);
-            });
-        } catch (TransportException $e) {
-        }
+            $message->priority(3);
+
+            $message->getHeaders()->addTextHeader('X-Header-Test', $header_test);
+        });
 
         $track = MailTracker::sentEmailModel()->newQuery()->orderBy('id', 'desc')->first();
         $this->assertEquals($header_test, $track->getHeader('X-Header-Test'));
@@ -1045,32 +1017,30 @@ class MailTrackerTest extends SetUpTest
         $subject = $faker->sentence;
         $name    = $faker->firstName . ' ' . $faker->lastName;
         View::addLocation(__DIR__);
-        try {
-            Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
+        Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->cc('cc.averylongemail1@johndoe.com', 'CC This Person With a Long Name 1');
-                $message->cc('cc.averylongemail2@johndoe.com', 'CC This Person With a Long Name 2');
-                $message->cc('cc.averylongemail3@johndoe.com', 'CC This Person With a Long Name 3');
-                $message->cc('cc.averylongemail4@johndoe.com', 'CC This Person With a Long Name 4');
-                $message->cc('cc.averylongemail5@johndoe.com', 'CC This Person With a Long Name 5');
-                $message->cc('cc.averylongemail6@johndoe.com', 'CC This Person With a Long Name 6');
-                $message->cc('cc.averylongemail7@johndoe.com', 'CC This Person With a Long Name 7');
-                $message->cc('cc.averylongemail8@johndoe.com', 'CC This Person With a Long Name 8');
-                $message->cc('cc.averylongemail9@johndoe.com', 'CC This Person With a Long Name 9');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->to($email, $name);
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->cc('cc.averylongemail1@johndoe.com', 'CC This Person With a Long Name 1');
+            $message->cc('cc.averylongemail2@johndoe.com', 'CC This Person With a Long Name 2');
+            $message->cc('cc.averylongemail3@johndoe.com', 'CC This Person With a Long Name 3');
+            $message->cc('cc.averylongemail4@johndoe.com', 'CC This Person With a Long Name 4');
+            $message->cc('cc.averylongemail5@johndoe.com', 'CC This Person With a Long Name 5');
+            $message->cc('cc.averylongemail6@johndoe.com', 'CC This Person With a Long Name 6');
+            $message->cc('cc.averylongemail7@johndoe.com', 'CC This Person With a Long Name 7');
+            $message->cc('cc.averylongemail8@johndoe.com', 'CC This Person With a Long Name 8');
+            $message->cc('cc.averylongemail9@johndoe.com', 'CC This Person With a Long Name 9');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->subject($subject);
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->priority(3);
-            });
-        } catch (TransportException $e) {
-        }
+            $message->subject($subject);
+
+            $message->priority(3);
+        });
 
         $track = MailTracker::sentEmailModel()->newQuery()->orderBy('id', 'desc')->first();
 
@@ -1119,24 +1089,22 @@ class MailTrackerTest extends SetUpTest
         $subject = $faker->sentence;
         $name    = $faker->firstName . ' ' . $faker->lastName;
         \View::addLocation(__DIR__);
-        try {
-            \Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
-                $message->from('from@johndoe.com', 'From Name');
-                $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->to($email, $name);
+        \Mail::send('email.test', [], function ($message) use ($email, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
 
-                $message->cc('cc@johndoe.com', 'CC Name');
-                $message->bcc('bcc@johndoe.com', 'BCC Name');
+            $message->to($email, $name);
 
-                $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
+            $message->cc('cc@johndoe.com', 'CC Name');
+            $message->bcc('bcc@johndoe.com', 'BCC Name');
 
-                $message->subject($subject);
+            $message->replyTo('reply-to@johndoe.com', 'Reply-To Name');
 
-                $message->priority(3);
-            });
-        } catch (TransportException $e) {
-        }
+            $message->subject($subject);
+
+            $message->priority(3);
+        });
 
         Event::assertDispatched(EmailSentEvent::class);
 
@@ -1214,14 +1182,11 @@ class MailTrackerTest extends SetUpTest
 
         Storage::fake(config('mail-tracker.tracker-filesystem'));
 
-        try {
-            Mail::raw($content, function ($message) use ($email, $name) {
-                $message->from('from@johndoe.com', 'From Name');
+        Mail::raw($content, function ($message) use ($email, $name) {
+            $message->from('from@johndoe.com', 'From Name');
 
-                $message->to($email, $name);
-            });
-        } catch (Exception $e) {
-        }
+            $message->to($email, $name);
+        });
 
         $this->assertDatabaseHas('sent_emails', [
             'hash'            => 'random-hash',
