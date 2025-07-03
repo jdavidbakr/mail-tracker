@@ -17,7 +17,11 @@ use jdavidbakr\MailTracker\Contracts\SentEmailModel;
  * @property int $opens
  * @property int $clicks
  * @property int|null $message_id
- * @property Collection $meta
+ * @property Collection|null $meta
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $clicked_at
+ * @property \Illuminate\Support\Carbon|null $opened_at
  */
 class SentEmail extends Model implements SentEmailModel
 {
