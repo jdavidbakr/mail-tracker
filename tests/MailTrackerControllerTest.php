@@ -4,6 +4,7 @@ namespace jdavidbakr\MailTracker\Tests;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use jdavidbakr\MailTracker\Events\ValidActionEvent;
 use jdavidbakr\MailTracker\MailTracker;
@@ -87,9 +88,9 @@ class MailTrackerControllerTest extends SetUpTest
 
         $redirect = 'http://' . Str::random(15) . '.com/' . Str::random(10) . '/' . Str::random(10) . '/' . rand(0, 100) . '/' . rand(0, 100) . '?page=' . rand(0, 100) . '&x=' . Str::random(32);
 
-        $this->get(route('mailTracker_l', [
-            MailTracker::hash_url($redirect), // Replace slash with dollar sign
-            $email->hash,
+        $this->get(URL::signedRoute('mailTracker_n', [
+            'n' => $redirect,
+            'h' => $email->hash,
         ]));
 
         $email->refresh();
@@ -115,9 +116,9 @@ class MailTrackerControllerTest extends SetUpTest
 
         $redirect = 'http://' . Str::random(15) . '.com/' . Str::random(10) . '/' . Str::random(10) . '/' . rand(0, 100) . '/' . rand(0, 100) . '?page=' . rand(0, 100) . '&x=' . Str::random(32);
 
-        $this->get(route('mailTracker_l', [
-            MailTracker::hash_url($redirect), // Replace slash with dollar sign
-            $email->hash,
+        $this->get(URL::signedRoute('mailTracker_n', [
+            'l' => $redirect,
+            'h' => $email->hash,
         ]));
 
         $email->refresh();

@@ -9,6 +9,7 @@ use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\SentMessage;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use jdavidbakr\MailTracker\Contracts\SentEmailModel;
 use jdavidbakr\MailTracker\Events\EmailSentEvent;
@@ -214,25 +215,13 @@ class MailTracker
             $url = str_replace('&amp;', '&', $matches[2]);
         }
 
-        return $matches[1].route(
+        return $matches[1].URL::signedRoute(
             'mailTracker_n',
             [
                 'l' => $url,
-                'h' => $this->hash
+                'h' => $this->hash,
             ]
         );
-    }
-
-    /**
-     * Legacy function
-     *
-     * @param [type] $url
-     * @return boolean
-     */
-    public static function hash_url($url)
-    {
-        // Replace "/" with "$"
-        return str_replace("/", "$", base64_encode($url));
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace jdavidbakr\MailTracker;
 
-use App\Http\Requests;
 use Event;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -15,7 +14,7 @@ class MailTrackerController extends Controller
     public function getT($hash)
     {
         // Create a 1x1 transparent pixel and return it
-        $pixel = sprintf('%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c', 71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 255, 0, 192, 192, 192, 0, 0, 0, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59);
+        $pixel    = sprintf('%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c', 71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 255, 0, 192, 192, 192, 0, 0, 0, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59);
         $response = Response::make($pixel, 200);
         $response->header('Content-type', 'image/gif');
         $response->header('Content-Length', strlen($pixel));
@@ -44,19 +43,15 @@ class MailTrackerController extends Controller
         return $response;
     }
 
-    public function getL($url, $hash)
-    {
-        $url = base64_decode(str_replace("$", "/", $url));
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            throw new BadUrlLink('Mail hash: '.$hash.', URL: '.$url);
-        }
-        return $this->linkClicked($url, $hash);
-    }
-
     public function getN(Request $request)
     {
-        $url = $request->l;
+        $url  = $request->l;
         $hash = $request->h;
+
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw new BadUrlLink('Mail hash: ' . $hash . ', URL: ' . $url);
+        }
+
         return $this->linkClicked($url, $hash);
     }
 
@@ -67,7 +62,7 @@ class MailTrackerController extends Controller
         }
 
         $url_host = parse_url($url, PHP_URL_HOST);
-        $tracker = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)
+        $tracker  = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)
             ->first();
 
         if ($tracker) {
@@ -92,7 +87,9 @@ class MailTrackerController extends Controller
             }
         }
 
-        if ( ! $tracker || empty($tracker->domains_in_context) || ! in_array($url_host, $tracker->domains_in_context) ){
+        // Only check the domains in context if we are storing the content.. If we aren't then we will have to rely on the ::signedRoute to protect us from unwanted links
+        // TODO: This can be removed eventually when we enforce the use of signed routes for all links with no grace period
+        if (config('mail-tracker.log-content', true) && (!$tracker || empty($tracker->domains_in_context) || !in_array($url_host, $tracker->domains_in_context))) {
             return redirect(config('mail-tracker.redirect-missing-links-to') ?: '/');
         }
 
