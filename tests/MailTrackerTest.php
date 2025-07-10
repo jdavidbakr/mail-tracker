@@ -422,8 +422,8 @@ class MailTrackerTest extends SetUpTest
         Config::set('mail-tracker.redirect-missing-links-to', '/home');
         $redirect = 'http://' . Str::random(15) . '.com/' . Str::random(10) . '/' . Str::random(10) . '/' . rand(0, 100) . '/' . rand(0, 100) . '?page=' . rand(0, 100) . '&x=' . Str::random(32);
 
-        // Do it with an invalid hash
-        $url = URL::signedRoute('mailTracker_n', [
+        // Do it with an invalid hash and an unsigned route
+        $url = URL::route('mailTracker_n', [
             'l' => $redirect,
             'h' => 'bad-hash',
         ]);
@@ -432,13 +432,28 @@ class MailTrackerTest extends SetUpTest
             ->assertRedirect('/home');
     }
 
+    /**
+     * @test
+     */
+    public function it_redirects_to_valid_domain_based_on_email_content()
+    {
+        $track = MailTracker::sentEmailModel()->newQuery()->create([
+            'hash'    => Str::random(32),
+            'content' => 'This is some content with a link to <a href="https://goodwebsite.com/test.html">Good website</a>',
+        ]);
+
+        Config::set('mail-tracker.redirect-missing-links-to', '/home');
+
+        // Use a NON signed route to test the fallback event
+        $this->get(URL::route('mailTracker_n', ['l' => 'https://goodwebsite.com/test.html', 'h' => $track->hash]))
+            ->assertRedirect('https://goodwebsite.com/test.html');
+    }
 
     /**
      * @test
      */
     public function it_redirects_to_fallback_for_invalid_domain()
     {
-        Event::fake();
         $track = MailTracker::sentEmailModel()->newQuery()->create([
             'hash'    => Str::random(32),
             'content' => 'This is some content with a link to <a href="https://goodwebsite.com">Good website</a>',
@@ -448,7 +463,7 @@ class MailTrackerTest extends SetUpTest
 
         $invalidUrl = 'http://evil.com'; // Domain not present in email content
 
-        $this->get(URL::signedRoute('mailTracker_n', ['l' => $invalidUrl, 'h' => $track->hash]))
+        $this->get(URL::route('mailTracker_n', ['l' => $invalidUrl, 'h' => $track->hash]))
             ->assertRedirect('/home');
     }
 

@@ -106,10 +106,9 @@ return [
     'search-date-start'         => null,
 
     /**
-     * Signed route enforcement settings - signed routes are now used to prevent redirect hijacking
+     * Fallback method for when ValidateSignature has been introduced, but old links still need to be supported
      */
-    'signed_route_enforcement'  => [
-        'start_date'        => env('MAIL_TRACKER_SIGNED_ROUTE_START_DATE', '2025-07-01'), // When the signed routes come into effect, after this date, all routes will be signed
-        'grace_period_days' => 30, // Default expiration time for signed routes in seconds (1 day)
-    ],
+    'fallback-event-listeners' => [
+        \jdavidbakr\MailTracker\Listener\DomainExistsInContentListener::class,
+    ]
 ];
