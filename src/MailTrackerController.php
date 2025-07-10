@@ -2,11 +2,10 @@
 
 namespace jdavidbakr\MailTracker;
 
-use Event;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Event;
 use jdavidbakr\MailTracker\Events\ValidActionEvent;
-use jdavidbakr\MailTracker\Exceptions\BadUrlLink;
 use Response;
 
 class MailTrackerController extends Controller
@@ -28,7 +27,7 @@ class MailTrackerController extends Controller
         if ($tracker) {
             $event = new ValidActionEvent($tracker);
 
-            \Illuminate\Support\Facades\Event::dispatch($event);
+            Event::dispatch($event);
 
             if (!$event->skip) {
                 RecordTrackingJob::dispatch($tracker, request()->ip())
@@ -48,28 +47,14 @@ class MailTrackerController extends Controller
         $url  = $request->l;
         $hash = $request->h;
 
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            throw new BadUrlLink('Mail hash: ' . $hash . ', URL: ' . $url);
-        }
-
-        return $this->linkClicked($url, $hash);
-    }
-
-    protected function linkClicked($url, $hash)
-    {
-        if (!$url) {
-            $url = config('mail-tracker.redirect-missing-links-to') ?: '/';
-        }
-
-        $url_host = parse_url($url, PHP_URL_HOST);
-        $tracker  = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)
-            ->first();
+        $tracker = MailTracker::sentEmailModel()->newQuery()->where('hash', $hash)->first();
 
         if ($tracker) {
             $event = new ValidActionEvent($tracker);
 
-            \Illuminate\Support\Facades\Event::dispatch($event);
+            Event::dispatch($event);
 
+            // If the event does not skip the tracking then we can log that the link was clicked
             if (!$event->skip) {
                 RecordLinkClickJob::dispatch($tracker, $url, request()->ip())
                     ->onQueue(config('mail-tracker.tracker-queue'));
@@ -77,22 +62,17 @@ class MailTrackerController extends Controller
                 // If no opened at but has a clicked event then we can assume that it was in fact opened, the tracking pixel may have been blocked
                 if (config('mail-tracker.inject-pixel') && !$tracker->opened_at) {
                     $tracker->opened_at = now();
-                    $tracker->save();
                 }
 
                 if (!$tracker->clicked_at) {
                     $tracker->clicked_at = now();
-                    $tracker->save();
                 }
+
+                $tracker->save();
             }
         }
 
-        // Only check the domains in context if we are storing the content.. If we aren't then we will have to rely on the ::signedRoute to protect us from unwanted links
-        // TODO: This can be removed eventually when we enforce the use of signed routes for all links with no grace period
-        if (config('mail-tracker.log-content', true) && (!$tracker || empty($tracker->domains_in_context) || !in_array($url_host, $tracker->domains_in_context))) {
-            return redirect(config('mail-tracker.redirect-missing-links-to') ?: '/');
-        }
-
+        // Perform the redirect as we know this is safe as it's made it through the ValidateSignature middleware or the ValidLinkEvent
         return redirect($url);
     }
 }

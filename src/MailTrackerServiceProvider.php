@@ -8,6 +8,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use jdavidbakr\MailTracker\Events\ValidLinkEvent;
+use jdavidbakr\MailTracker\Listener\DomainExistsInContentListener;
 use jdavidbakr\MailTracker\Middleware\ValidateSignature;
 
 class MailTrackerServiceProvider extends ServiceProvider
@@ -39,6 +41,13 @@ class MailTrackerServiceProvider extends ServiceProvider
             $tracker = new MailTracker;
             $tracker->messageSent($mail);
         });
+
+        foreach (config('mail-tracker.fallback-event-listeners', [
+            DomainExistsInContentListener::class,
+        ]) as $listener) {
+            // This event is only fired when the ValidateSignature middleware is not able to validate the link
+            Event::listen(ValidLinkEvent::class, $listener);
+        }
 
         // Install the routes
         $this->installRoutes();
