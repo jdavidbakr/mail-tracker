@@ -12,10 +12,8 @@ use jdavidbakr\MailTracker\Model\SentEmail;
 
 class ValidateSignature extends Middleware
 {
-    public function handle($request, Closure $next, $relative = null)
+    public function handle($request, Closure $next, ...$args)
     {
-        $ignore = property_exists($this, 'except') ? $this->except : $this->ignore;
-
         $hash = $request->get('h');
         $url  = $request->get('l');
 
@@ -23,8 +21,10 @@ class ValidateSignature extends Middleware
             throw new BadUrlLink('Mail hash: ' . $hash . ', URL: ' . $url);
         }
 
+        [$relative, $ignore] = $this->parseArguments($args);
+
         // If the signature is valid then we know that it has not been tampered with so continue
-        if ($request->hasValidSignatureWhileIgnoring($ignore, $relative !== 'relative')) {
+        if ($request->hasValidSignatureWhileIgnoring($ignore, ! $relative)) {
             return $next($request);
         }
 
