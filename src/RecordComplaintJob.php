@@ -32,7 +32,11 @@ class RecordComplaintJob implements ShouldQueue
 
     public function handle()
     {
-        $sent_email = SentEmail::where('message_id', $this->message->mail->messageId)->first();
+        $emailHash = collect($this->message->mail->headers)->where('name', 'X-Mailer-Hash')->first()?->value;
+        if ($emailHash) { 
+            $sent_email = SentEmail::where('hash', $emailHash)->first();
+        }
+        
         if ($sent_email) {
             $meta = collect($sent_email->meta);
             $meta->put('complaint', true);
