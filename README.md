@@ -38,6 +38,7 @@ If you are updating from an earlier version, you will need to update the config 
 ```bash
 php artisan vendor:publish
 ```
+
 ```bash
 php artisan migrate
 ```
@@ -72,7 +73,7 @@ If you would like to use your own migrations, you can skip this library migratio
 ```php
 // In AppServiceProvider
 
-public function boot()
+public function register()
 {
     MailTracker::ignoreMigrations();
 }
@@ -103,15 +104,16 @@ If you do not wish to have an email tracked, then you can add the `X-No-Track` h
 
 ### Storing content of mails in filesystem
 
-By default, the content of an e-mail is stored in the `content` column in the database so that the e-mail can be viewed after it has been sent. 
+By default, the content of an e-mail is stored in the `content` column in the database so that the e-mail can be viewed after it has been sent.
 If a lot of emails are sent, this can consume a lot of memory and slow down the database overall. It is possible to specify in the configuration that the content should be saved to a file in the file system.
 
-````php
+```php
     'log-content-strategy' => 'filesystem',
     'tracker-filesystem' => null
     'tracker-filesystem-folder' => 'mail-tracker',
-````
-To use the filesystem you need to change the `log-content-strategy` from `database` to `filesystem`. 
+```
+
+To use the filesystem you need to change the `log-content-strategy` from `database` to `filesystem`.
 You can specify the disk with `tracker-filesystem` and the folder it should store the file in with `tracker-filesystem-folder`.
 
 ### Overriding models
@@ -148,6 +150,7 @@ class OwnEmailSentModel extends Model implements SentEmailModel {
 If you have a specific email that you do not want to track, you can add the `X-No-Track` header to the email. This will prevent the email from being tracked. The header will be removed from the email prior to being sent.
 
 In laravel 9 onwards you can introduce a headers method to your Mailable class. This will stop the tracking pixel/click tracking from applying to the Mailable
+
 ```php
 public function headers()
 {
@@ -159,7 +162,7 @@ public function headers()
 
 ## Skipping Open/Click Tracking for Anti-virus/Spam Filters
 
-Some mail servers might scan emails before they deliver which can trigger the tracking pixel, or even clicked links. You can add an event listener to the ValidActionEvent to handle this. 
+Some mail servers might scan emails before they deliver which can trigger the tracking pixel, or even clicked links. You can add an event listener to the ValidActionEvent to handle this.
 
 ```php
 class ValidUserListener {
@@ -187,27 +190,27 @@ When an email is sent, viewed, or a link is clicked, its tracking information is
 You may want to do additional processing on these events, so an event is fired in these cases:
 
 -   jdavidbakr\MailTracker\Events\EmailSentEvent
-    - Public attribute `sent_email` contains the `SentEmail` model
+    -   Public attribute `sent_email` contains the `SentEmail` model
 -   jdavidbakr\MailTracker\Events\ViewEmailEvent
-    - Public attribute `sent_email` contains the `SentEmail` model
-    - Public attribute `ip_address` contains the IP address that was used to trigger the event
+    -   Public attribute `sent_email` contains the `SentEmail` model
+    -   Public attribute `ip_address` contains the IP address that was used to trigger the event
 -   jdavidbakr\MailTracker\Events\LinkClickedEvent
-    - Public attribute `sent_email` contains the `SentEmail` model
-    - Public attribute `ip_address` contains the IP address that was used to trigger the event
-    - Public attribute `link_url` contains the clicked URL
+    -   Public attribute `sent_email` contains the `SentEmail` model
+    -   Public attribute `ip_address` contains the IP address that was used to trigger the event
+    -   Public attribute `link_url` contains the clicked URL
 
 If you are using the Amazon SNS notification system, these events are fired so you can do additional processing.
 
 -   jdavidbakr\MailTracker\Events\EmailDeliveredEvent (when you received a "message delivered" event, you may want to mark the email as "good" or "delivered" in your database)
-    - Public attribute `sent_email` contains the `SentEmail` model
-    - Public attribute `email_address` contains the specific address that was used to trigger the event
+    -   Public attribute `sent_email` contains the `SentEmail` model
+    -   Public attribute `email_address` contains the specific address that was used to trigger the event
 -   jdavidbakr\MailTracker\Events\ComplaintMessageEvent (when you received a complaint, ex: marked as "spam", you may want to remove the email from your database)
-    - Public attribute `sent_email` contains the `SentEmail` model
-    - Public attribute `email_address` contains the specific address that was used to trigger the event
+    -   Public attribute `sent_email` contains the `SentEmail` model
+    -   Public attribute `email_address` contains the specific address that was used to trigger the event
 -   jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent (when you receive a permanent bounce, you may want to mark the email as bad or remove it from your database)
-    jdavidbakr\MailTracker\Events\TransientBouncedMessageEvent (when you receive a transient bounce.  Check the event's public attributes for `bounce_sub_type` and `diagnostic_code` to determine if you want to do additional processing when this event is received.)
-    - Public attribute `sent_email` contains the `SentEmail` model
-    - Public attribute `email_address` contains the specific address that was used to trigger the event
+    jdavidbakr\MailTracker\Events\TransientBouncedMessageEvent (when you receive a transient bounce. Check the event's public attributes for `bounce_sub_type` and `diagnostic_code` to determine if you want to do additional processing when this event is received.)
+    -   Public attribute `sent_email` contains the `SentEmail` model
+    -   Public attribute `email_address` contains the specific address that was used to trigger the event
 
 To install an event listener, you will want to create a file like the following:
 
