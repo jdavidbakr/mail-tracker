@@ -198,9 +198,17 @@ class MailTracker
     {
         $this->hash = $hash;
 
+        // Find all links without data-dont-track attribute and replace them
         $html = preg_replace_callback(
-            "/(<a[^>]*href=[\"])([^\"]*)/",
+            "/(<a(?![^>]*data-dont-track)[^>]*href=[\"])([^\"]*)/",
             [$this, 'inject_link_callback'],
+            $html
+        );
+
+        // Remove the data-dont-track attributes so the final html is clean
+        $html = preg_replace(
+            '/\s*data-dont-track(?=\s|>)/',
+            '',
             $html
         );
 
