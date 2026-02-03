@@ -3,16 +3,12 @@
 namespace jdavidbakr\MailTracker;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use jdavidbakr\MailTracker\Model\SentEmail;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Event;
 use jdavidbakr\MailTracker\Events\ViewEmailEvent;
-use jdavidbakr\MailTracker\Events\LinkClickedEvent;
-use jdavidbakr\MailTracker\Model\SentEmailUrlClicked;
-use jdavidbakr\MailTracker\Events\EmailDeliveredEvent;
 
 class RecordTrackingJob implements ShouldQueue
 {
@@ -23,6 +19,13 @@ class RecordTrackingJob implements ShouldQueue
 
     public $sentEmail;
     public $ipAddress;
+
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     *
+     * @var int
+     */
+    public $maxExceptions = 3;
 
     public function __construct($sentEmail, $ipAddress)
     {

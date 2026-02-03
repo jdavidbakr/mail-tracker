@@ -2,9 +2,10 @@
 
 namespace jdavidbakr\MailTracker\Events;
 
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use jdavidbakr\MailTracker\Model\SentEmail;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\SerializesModels;
+use jdavidbakr\MailTracker\Contracts\SentEmailModel;
 
 class LinkClickedEvent implements ShouldQueue
 {
@@ -12,16 +13,19 @@ class LinkClickedEvent implements ShouldQueue
 
     public $sent_email;
     public $ip_address;
+    public $link_url;
 
     /**
      * Create a new event instance.
      *
-     * @param  sent_email  $sent_email
-     * @return void
+     * @param Model|SentEmailModel $sent_email
+     * @param string $ip_address
+     * @param string $link_url
      */
-    public function __construct(SentEmail $sent_email, $ip_address)
+    public function __construct(Model|SentEmailModel $sent_email, $ip_address, $link_url)
     {
         $this->sent_email = $sent_email;
         $this->ip_address = $ip_address;
+        $this->link_url = $link_url;
     }
 }

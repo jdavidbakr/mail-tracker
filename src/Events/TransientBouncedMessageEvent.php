@@ -2,9 +2,10 @@
 
 namespace jdavidbakr\MailTracker\Events;
 
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use jdavidbakr\MailTracker\Model\SentEmail;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\SerializesModels;
+use jdavidbakr\MailTracker\Contracts\SentEmailModel;
 
 class TransientBouncedMessageEvent implements ShouldQueue
 {
@@ -18,11 +19,12 @@ class TransientBouncedMessageEvent implements ShouldQueue
     /**
      * Create a new event instance.
      *
-     * @param  email_address  $email_address
-     * @param  sent_email  $sent_email
-     * @return void
+     * @param string $email_address
+     * @param $bounce_sub_type
+     * @param $diagnostic_code
+     * @param Model|SentEmailModel|null $sent_email $sent_email
      */
-    public function __construct($email_address, $bounce_sub_type, $diagnostic_code, SentEmail $sent_email = null)
+    public function __construct($email_address, $bounce_sub_type, $diagnostic_code, Model|SentEmailModel|null $sent_email = null)
     {
         $this->email_address = $email_address;
         $this->sent_email = $sent_email;

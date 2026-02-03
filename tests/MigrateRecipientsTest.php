@@ -5,7 +5,7 @@ namespace jdavidbakr\MailTracker\Tests;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use jdavidbakr\MailTracker\Console\MigrateRecipients;
-use jdavidbakr\MailTracker\Model\SentEmail;
+use jdavidbakr\MailTracker\MailTracker;
 
 class MigrateRecipientsTest extends SetUpTest
 {
@@ -14,12 +14,12 @@ class MigrateRecipientsTest extends SetUpTest
      */
     public function it_converts_existing_recipient_values()
     {
-        Schema::connection((new SentEmail())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
+        Schema::connection(MailTracker::sentEmailModel()->getConnectionName())->table('sent_emails', function (Blueprint $table) {
             $table->string('sender')->nullable();
             $table->string('recipient')->nullable();
         });
-        SentEmail::unguard();
-        $tracker = SentEmail::create([
+        MailTracker::sentEmailModel()::unguard();
+        $tracker = MailTracker::sentEmailModel()->newQuery()->create([
             'hash' => 'email-hash',
             'sender' => 'Sender Dude <sender@example.com>',
             'recipient' => 'Recipient Dude <recipient@example.com>',
@@ -42,12 +42,12 @@ class MigrateRecipientsTest extends SetUpTest
      */
     public function it_converts_existing_recipient_values_with_no_name()
     {
-        Schema::connection((new SentEmail())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
+        Schema::connection(MailTracker::sentEmailModel()->getConnectionName())->table('sent_emails', function (Blueprint $table) {
             $table->string('sender')->nullable();
             $table->string('recipient')->nullable();
         });
-        SentEmail::unguard();
-        $tracker = SentEmail::create([
+        MailTracker::sentEmailModel()::unguard();
+        $tracker = MailTracker::sentEmailModel()->newQuery()->create([
             'hash' => 'email-hash',
             'sender' => ' <sender@example.com>',
             'recipient' => ' <recipient@example.com>',

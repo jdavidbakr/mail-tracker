@@ -4,7 +4,7 @@ namespace jdavidbakr\MailTracker\Tests;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Event;
-use jdavidbakr\MailTracker\Model\SentEmail;
+use jdavidbakr\MailTracker\MailTracker;
 use jdavidbakr\MailTracker\RecordBounceJob;
 use jdavidbakr\MailTracker\RecordDeliveryJob;
 use jdavidbakr\MailTracker\RecordTrackingJob;
@@ -21,11 +21,11 @@ class RecordTrackingJobTest extends SetUpTest
     public function it_records_views()
     {
         Event::fake();
-        $track = \jdavidbakr\MailTracker\Model\SentEmail::create([
+        $track = MailTracker::sentEmailModel()->newQuery()->create([
                 'hash' => Str::random(32),
             ]);
         $job = new RecordTrackingJob($track, '127.0.0.1');
-        
+
         $job->handle();
 
         Event::assertDispatched(ViewEmailEvent::class, function ($e) use ($track) {

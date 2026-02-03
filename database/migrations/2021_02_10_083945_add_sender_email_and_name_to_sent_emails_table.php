@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use jdavidbakr\MailTracker\Model\SentEmail;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use jdavidbakr\MailTracker\MailTracker;
 
 class AddSenderEmailAndNameToSentEmailsTable extends Migration
 {
@@ -14,7 +14,7 @@ class AddSenderEmailAndNameToSentEmailsTable extends Migration
      */
     public function up()
     {
-        Schema::connection((new SentEmail())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
+        Schema::connection(MailTracker::sentEmailModel()->getConnectionName())->table('sent_emails', function (Blueprint $table) {
             $table->string('recipient_email')->nullable()->after('headers');
             $table->string('recipient_name')->nullable()->after('headers');
             $table->string('sender_email')->nullable()->after('headers');
@@ -29,7 +29,7 @@ class AddSenderEmailAndNameToSentEmailsTable extends Migration
      */
     public function down()
     {
-        Schema::connection((new SentEmail())->getConnectionName())->table('sent_emails', function (Blueprint $table) {
+        Schema::connection(MailTracker::sentEmailModel()->getConnectionName())->table('sent_emails', function (Blueprint $table) {
             $table->dropColumn('sender_name');
             $table->dropColumn('sender_email');
             $table->dropColumn('recipient_name');

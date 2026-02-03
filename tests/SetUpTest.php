@@ -59,6 +59,7 @@ abstract class SetUpTest extends TestCase
             'secret' => 'aws-secret',
         ]);
         $app['config']->set('mail.from.address', 'test@example.com');
+        $app['config']->set('mail.default', 'log');
         $app['config']->set('app.debug', true);
     }
 }

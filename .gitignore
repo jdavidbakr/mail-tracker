@@ -1,7 +1,7 @@
 vendor
+storage
 setup-test-variables.sh
 .idea
 .php_cs.cache
 .phpunit.result.cache
 composer.lock
-C:37:"PHPUnit\Runner\DefaultTestResultCache":1442:{a:2:{s:7:"defects";a:2:{s:40:"AddressVerificationTest::testSendMessage";i:4;s:60:"AddressVerificationTest::it_throws_exception_on_invalid_link";i:5;}s:5:"times";a:19:{s:40:"AddressVerificationTest::testSendMessage";d:1.196;s:51:"AddressVerificationTest::testSendMessageWithMailRaw";d:0.499;s:55:"AddressVerificationTest::it_doesnt_track_if_told_not_to";d:0.796;s:50:"AddressVerificationTest::no_track_doesnt_crash_ses";d:0.67;s:33:"AddressVerificationTest::testPing";d:0.073;s:33:"AddressVerificationTest::testLink";d:0.018;s:60:"AddressVerificationTest::it_throws_exception_on_invalid_link";d:0.008;s:61:"AddressVerificationTest::random_string_in_link_does_not_crash";d:0.008;s:60:"AddressVerificationTest::it_retrieves_the_mesage_id_from_ses";d:0.057;s:51:"AddressVerificationTest::it_confirms_a_subscription";d:0.301;s:59:"AddressVerificationTest::it_processes_with_registered_topic";d:0.187;s:49:"AddressVerificationTest::it_ignores_invalid_topic";d:0.012;s:48:"AddressVerificationTest::it_processes_a_delivery";d:0.012;s:46:"AddressVerificationTest::it_processes_a_bounce";d:0.013;s:49:"AddressVerificationTest::it_processes_a_complaint";d:0.009;s:55:"AddressVerificationTest::it_handles_ampersands_in_links";d:0.021;s:49:"AddressVerificationTest::it_retrieves_header_data";d:0.705;s:56:"AddressVerificationTest::it_handles_secondary_connection";d:0.681;s:65:"AddressVerificationTest::it_can_retrieve_url_clicks_from_eloquent";d:0.019;}}}

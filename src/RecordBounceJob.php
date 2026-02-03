@@ -10,7 +10,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Event;
 use jdavidbakr\MailTracker\Events\PermanentBouncedMessageEvent;
 use jdavidbakr\MailTracker\Events\TransientBouncedMessageEvent;
-use jdavidbakr\MailTracker\Model\SentEmail;
 
 class RecordBounceJob implements ShouldQueue
 {
@@ -20,6 +19,13 @@ class RecordBounceJob implements ShouldQueue
     use SerializesModels;
 
     public $message;
+
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     *
+     * @var int
+     */
+    public $maxExceptions = 3;
 
     public function __construct($message)
     {
@@ -35,7 +41,7 @@ class RecordBounceJob implements ShouldQueue
     {
         $emailHash = collect($this->message->mail->headers)->where('name', 'X-Mailer-Hash')->first()?->value;
         if ($emailHash) { 
-            $sent_email = SentEmail::where('hash', $emailHash)->first();
+            $sent_email = MailTracker::sentEmailModel()->newQuery()->where('hash', $emailHash)->first();
         }
         
         if ($sent_email) {
