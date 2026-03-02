@@ -1261,6 +1261,173 @@ class MailTrackerTest extends SetUpTest
 
         MailTracker::useSentEmailUrlClickedModel(SentEmailUrlClicked::class);
     }
+
+    /**
+     * @test
+     */
+    public function it_does_not_track_links_with_data_dont_track_attribute()
+    {
+        Event::fake(LinkClickedEvent::class);
+        Config::set('mail-tracker.track-links', true);
+        Config::set('mail-tracker.inject-pixel', true);
+        Config::set('mail.driver', 'array');
+        (new MailServiceProvider(app()))->register();
+
+        $faker   = Factory::create();
+        $email   = $faker->email;
+        $subject = $faker->sentence;
+        $name    = $faker->firstName . ' ' . $faker->lastName;
+        View::addLocation(__DIR__);
+
+        Mail::send('email.testDontTrack', [], function ($message) use ($email, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->sender('sender@johndoe.com', 'Sender Name');
+            $message->to($email, $name);
+            $message->subject($subject);
+        });
+
+        $driver = app('mailer')->getSymfonyTransport();
+        $this->assertEquals(1, count($driver->messages()));
+
+        $mes  = $driver->messages()[0];
+        $body = $mes->getOriginalMessage()->getBody()->getBody();
+
+        // Extract tracked-link.com URL
+        preg_match('/<a[^>]*href=[\'"]([^\'"]*tracked-link\.com[^\'"]*)[\'"]/', $body, $trackedMatch);
+        $this->assertNotEmpty($trackedMatch, 'Should find tracked-link.com link');
+        $this->assertStringContainsString('/n?h=', $trackedMatch[1], 'Tracked link should contain tracking route');
+
+        // Extract google.com URL
+        preg_match('/<a[^>]*href=[\'"]([^\'"]*google\.com[^\'"]*)[\'"]/', $body, $googleMatch);
+        $this->assertNotEmpty($googleMatch, 'Should find google.com link');
+        $this->assertStringContainsString('/n?h=', $googleMatch[1], 'Google link should be tracked');
+
+        // Check that untracked links (with data-dont-track) remain unchanged and are NOT tracked
+        preg_match('/<a[^>]*href=[\'"]([^\'"]*untracked-link\.com[^\'"]*)[\'"]/', $body, $untrackedMatch);
+        $this->assertNotEmpty($untrackedMatch, 'Should find untracked-link.com link');
+        $this->assertEquals(
+            'http://www.untracked-link.com',
+            $untrackedMatch[1],
+            'Untracked link should be original URL'
+        );
+        $this->assertStringNotContainsString(
+            '/n?h=',
+            $untrackedMatch[1],
+            'Untracked link should NOT contain tracking route'
+        );
+
+        // Check privacy-link.com
+        preg_match('/<a[^>]*href=[\'"]([^\'"]*privacy-link\.com[^\'"]*)[\'"]/', $body, $privacyMatch);
+        $this->assertNotEmpty($privacyMatch, 'Should find privacy-link.com link');
+        $this->assertEquals('http://www.privacy-link.com', $privacyMatch[1], 'Privacy link should be original URL');
+        $this->assertStringNotContainsString(
+            '/n?h=',
+            $privacyMatch[1],
+            'Privacy link should NOT contain tracking route'
+        );
+
+        // Verify data-dont-track attribute has been removed
+        $this->assertStringNotContainsString(
+            'data-dont-track',
+            $body,
+            'data-dont-track attribute should be removed from final HTML'
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_removes_data_dont_track_attribute_from_final_html()
+    {
+        Event::fake(LinkClickedEvent::class);
+        Config::set('mail-tracker.track-links', true);
+        Config::set('mail-tracker.inject-pixel', true);
+        Config::set('mail.driver', 'array');
+        (new MailServiceProvider(app()))->register();
+
+        $faker   = Factory::create();
+        $email   = $faker->email;
+        $subject = $faker->sentence;
+        $name    = $faker->firstName . ' ' . $faker->lastName;
+        View::addLocation(__DIR__);
+
+        Mail::send('email.testDontTrack', [], function ($message) use ($email, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->to($email, $name);
+            $message->subject($subject);
+        });
+
+        $driver = app('mailer')->getSymfonyTransport();
+        $mes    = $driver->messages()[0];
+        $body   = $mes->getOriginalMessage()->getBody()->getBody();
+
+        // Verify that data-dont-track attribute has been removed from final HTML
+        $this->assertStringNotContainsString(
+            'data-dont-track',
+            $body,
+            'data-dont-track attribute should be removed from final HTML'
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_handles_mixed_tracked_and_untracked_links()
+    {
+        Event::fake(LinkClickedEvent::class);
+        Config::set('mail-tracker.track-links', true);
+        Config::set('mail-tracker.inject-pixel', true);
+        Config::set('mail.driver', 'array');
+        (new MailServiceProvider(app()))->register();
+
+        $faker   = Factory::create();
+        $email   = $faker->email;
+        $subject = $faker->sentence;
+        $name    = $faker->firstName . ' ' . $faker->lastName;
+        View::addLocation(__DIR__);
+
+        Mail::send('email.testDontTrack', [], function ($message) use ($email, $subject, $name) {
+            $message->from('from@johndoe.com', 'From Name');
+            $message->to($email, $name);
+            $message->subject($subject);
+        });
+
+        $driver = app('mailer')->getSymfonyTransport();
+        $mes    = $driver->messages()[0];
+        $body   = $mes->getOriginalMessage()->getBody()->getBody();
+        $hash   = $mes->getOriginalMessage()->getHeaders()->get('X-Mailer-Hash')->getValue();
+
+        // Count total links in the original template (4 links total: 2 tracked, 2 untracked)
+        preg_match_all('/<a[^>]*href=[\'"]([^\'"]*)/', $body, $allLinks);
+
+        // Verify we have all 4 links
+        $this->assertGreaterThanOrEqual(4, count($allLinks[1]), 'Should have at least 4 links');
+
+        // Count how many links contain the tracking route
+        $trackedCount = 0;
+        $untrackedCount = 0;
+
+        foreach ($allLinks[0] as $link) {
+            if (strpos($link, '/n?h=') !== false) {
+                $trackedCount++;
+            } else {
+                // Check if it's one of the original untracked URLs
+                if (strpos($link, 'untracked-link.com') !== false || strpos($link, 'privacy-link.com') !== false) {
+                    $untrackedCount++;
+                }
+            }
+        }
+
+        // We should have exactly 2 tracked links and 2 untracked links
+        $this->assertEquals(2, $trackedCount, 'Should have exactly 2 tracked links');
+        $this->assertEquals(2, $untrackedCount, 'Should have exactly 2 untracked links');
+
+        // Verify specific URLs
+        $this->assertStringContainsString('tracked-link.com', $body);
+        $this->assertStringContainsString('untracked-link.com', $body);
+        $this->assertStringContainsString('google.com', $body);
+        $this->assertStringContainsString('privacy-link.com', $body);
+    }
 }
 
 class SentEmailStub extends Model

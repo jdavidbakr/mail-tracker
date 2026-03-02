@@ -160,6 +160,17 @@ public function headers()
 }
 ```
 
+## Skip Tracking for Specific Links
+
+If you want to prevent tracking on specific links within an email while still tracking other links, you can add the `data-dont-track` attribute to individual anchor tags. This is useful when you have some links that you want to track and others that you don't.
+
+```html
+<a href="https://example.com/track-this">This link will be tracked</a>
+<a href="https://example.com/dont-track-this" data-dont-track>This link will not be tracked</a>
+```
+
+The `data-dont-track` attribute will be removed from the final HTML before the email is sent, so it won't be visible to recipients.
+
 ## Skipping Open/Click Tracking for Anti-virus/Spam Filters
 
 Some mail servers might scan emails before they deliver which can trigger the tracking pixel, or even clicked links. You can add an event listener to the ValidActionEvent to handle this.
